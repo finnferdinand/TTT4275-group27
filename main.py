@@ -23,24 +23,24 @@ test_index = 0 # only testing first image for now, preliminary testing
 test_image = testv[test_index:test_index+1, 0:vec_size] # select first image from test set
 
 # Iterating through chunks of CHUNK_SIZE images from the training set
-CHUNK_SIZE = num_train             # full test set only for preliminary testing (TODO: Set to 1000)
+CHUNK_SIZE = num_train             # full training set only for preliminary testing (TODO: Set to 1000)
 n_chunks = num_train // CHUNK_SIZE # number of training samples in a single chunk
 for chunk in range(n_chunks):
     chunk_data = trainv[CHUNK_SIZE*chunk : CHUNK_SIZE*(chunk+1), 0:vec_size] # chunk slice from full training set
     dist = scipy.spatial.distance_matrix(chunk_data, test_image)             # distance vector from test image to chunk
     nn_index = np.argmin(dist)                                               # find nearest neigbor -> smallest distance to test sample
-    print("Closest template", nn_index, "labeled", trainlab[nn_index+chunk*CHUNK_SIZE][0])
-    print("Actual label", testlab[test_index][0], "distance", dist[nn_index][0])
+    print(f"Closest template {nn_index} " 
+          f"labeled {trainlab[nn_index+chunk*CHUNK_SIZE][0]} "
+          f"with a distance of {round(dist[nn_index][0], 2)}")
+    print("Actual label", testlab[test_index][0])
 
 # DRAWING IMAGES
-# test sample image
+plt.subplot(1,2,1) # test sample image
 square_test_image = np.reshape(test_image, [row_size, col_size])
-plt.figure(1)
 plt.imshow(square_test_image, interpolation='nearest')
-
-# nearest neigbor image
+plt.title("Test Sample")
+plt.subplot(1,2,2) # nearest neigbor image
 square_closest_neighbor = np.reshape(chunk_data[nn_index:nn_index+1, 0:vec_size], [row_size, col_size])
-plt.figure(2)
 plt.imshow(square_closest_neighbor, interpolation='nearest')
-
+plt.title("Nearest Neighbor")
 plt.show()
