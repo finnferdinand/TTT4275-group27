@@ -35,6 +35,8 @@ def classifier_1nn():
     NUM_CHUNKS = num_train // TRAINING_CHUNK_SIZE # number of training samples in a single chunk
     TEST_CHUNK_SIZE = num_test // NUM_CHUNKS
     for chunk in range(NUM_CHUNKS):
+        # IDEA: RUN EACH ITERATION IN THEIR OWN THREAD, THEY ARE INDEPENDENT OF EACH OTHER.
+
         print(f"testing progress: {round(chunk/NUM_CHUNKS*100)}%", end="\r")
         training_chunk = trainv[TRAINING_CHUNK_SIZE*chunk:TRAINING_CHUNK_SIZE*(chunk+1), 0:vec_size] # chunk slice from full training set
         test_chunk = testv[TEST_CHUNK_SIZE*chunk:TEST_CHUNK_SIZE*(chunk+1), 0:vec_size]
