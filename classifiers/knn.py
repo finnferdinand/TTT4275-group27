@@ -19,6 +19,8 @@ col_size  = data_all['col_size'][0,0]  # number of columns in a single image
 vec_size  = data_all['vec_size'][0,0]  # number of elements in an image vector
 
 def classifier_1nn():
+    print("Testing 1NN classifier. This may take a few seconds...")
+
     confusion_matrix = np.zeros([10, 10]) # row = true class, col = classified class
     SELECTION_SIZE = 10
     misclassified_counter = 0
@@ -33,12 +35,12 @@ def classifier_1nn():
     NUM_CHUNKS = num_train // TRAINING_CHUNK_SIZE # number of training samples in a single chunk
     TEST_CHUNK_SIZE = num_test // NUM_CHUNKS
     for chunk in range(NUM_CHUNKS):
-        print(f"testing chunk: {chunk}")
+        print(f"testing progress: {round(chunk/NUM_CHUNKS*100)}%", end="\r")
         training_chunk = trainv[TRAINING_CHUNK_SIZE*chunk:TRAINING_CHUNK_SIZE*(chunk+1), 0:vec_size] # chunk slice from full training set
         test_chunk = testv[TEST_CHUNK_SIZE*chunk:TEST_CHUNK_SIZE*(chunk+1), 0:vec_size]
         dist = scipy.spatial.distance_matrix(training_chunk, test_chunk)                             # distance vector from test image to chunk
         for test_sample in range(TEST_CHUNK_SIZE):
-            nn_index = np.argmin(dist[test_sample,0:vec_size])
+            nn_index = np.argmin(dist[0:TRAINING_CHUNK_SIZE,test_sample])
             classified_label = trainlab[nn_index+chunk*TRAINING_CHUNK_SIZE,0]
             actual_label = testlab[test_sample+chunk*TEST_CHUNK_SIZE,0]
             confusion_matrix[actual_label, classified_label] += 1
@@ -51,7 +53,7 @@ def classifier_1nn():
                 correctly_classified_counter += 1
                 correctly_classified_labels.append(classified_label)
         
-        if chunk > 5: break # ONLY FOR TESTING 
+        #if chunk > 5: break # ONLY FOR TESTING 
     
     misclassified = (misclassified_selection, misclassified_labels)
     correctly_classified = (correctly_classified_selection, correctly_classified_labels)
