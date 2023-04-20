@@ -1,14 +1,25 @@
-import classifiers.knn as cl
-import utilities.plotting
+import classifiers.knn as knn
+import scipy.io
 from matplotlib import pyplot as plt
 import numpy as np
-
-(confusion_matrix, misclassified, correctly_classified) = cl.classifier_1nn()
 np.set_printoptions(suppress=True)
-print("\nCONFUSION MATRIX:")
-print(confusion_matrix)
-print(f"SUCCESS RATE: {round(np.trace(confusion_matrix)/np.sum(confusion_matrix)*100,2)}%")
 
-utilities.plotting.draw_images(misclassified)
-utilities.plotting.draw_images(correctly_classified)
+## DIGITS
+# import
+DATA_ALL_PATH = 'MNist_ttt4275/data_all.mat'
+data_all = scipy.io.loadmat(DATA_ALL_PATH)
+
+# 1NN classifier
+NN = knn.NN(data_all)
+NN.test(50)
+print("1NN Confusion Matrix:")
+print(NN.confusion_matrix)
+print(f"Detection rate: {round(NN.get_detection_rate()*100, 2)}%")
+
+selection_size = 10
+NN.plot_misclassified(selection_size)
+NN.plot_correctly_classified(selection_size)
+
+
+
 plt.show()

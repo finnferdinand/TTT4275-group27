@@ -1,62 +1,92 @@
 import numpy as np
-import scipy.io
 import scipy.spatial
+import scipy.stats.contingency
+import concurrent.futures
+from matplotlib import pyplot as plt
 
-# IMPORT DATASET
-MODULE_NAME = '.'.join(__name__.split('.')[:-1])
-DATA_ALL_PATH = MODULE_NAME + '/MNist_ttt4275/data_all.mat'
-data_all = scipy.io.loadmat(DATA_ALL_PATH)
+class Classifier(object):
+    """
+    An abstract class for a general classifier.
+    """
+    figure_counter = 0
 
-trainv   = data_all['trainv']   # training data
-trainlab = data_all['trainlab'] # training labels
-testv    = data_all['testv']    # test data
-testlab  = data_all['testlab']  # test labels
+    def __init__(self, data_all):
+        self.trainv   = data_all['trainv']             # training data
+        self.trainlab = data_all['trainlab'].flatten() # training labels
+        self.testv    = data_all['testv']              # test data
+        self.testlab  = data_all['testlab'].flatten()  # test labels
 
-num_train = data_all['num_train'][0,0] # number of training samples
-num_test  = data_all['num_test'][0,0]  # number of testing samples
-row_size  = data_all['row_size'][0,0]  # number of rows in a single image
-col_size  = data_all['col_size'][0,0]  # number of columns in a single image
-vec_size  = data_all['vec_size'][0,0]  # number of elements in an image vector
+        self.num_train = data_all['num_train'][0,0] # number of training samples
+        self.num_test  = data_all['num_test'][0,0]  # number of testing samples
+        self.row_size  = data_all['row_size'][0,0]  # number of rows in a single image
+        self.col_size  = data_all['col_size'][0,0]  # number of columns in a single image
+        self.vec_size  = data_all['vec_size'][0,0]  # number of elements in an image vector
 
-def classifier_1nn():
-    print("Testing 1NN classifier. This may take a few seconds...")
+        self.confusion_matrix = np.zeros([10, 10]) # row = true class, col = classified class
+        self.classified_labels = None
 
-    confusion_matrix = np.zeros([10, 10]) # row = true class, col = classified class
-    SELECTION_SIZE = 10
-    misclassified_counter = 0
-    misclassified_selection = np.zeros([SELECTION_SIZE, vec_size])
-    misclassified_labels = []
-    correctly_classified_counter = 0
-    correctly_classified_selection = np.zeros([SELECTION_SIZE, vec_size])
-    correctly_classified_labels = []
+    def get_detection_rate(self):
+        return np.trace(self.confusion_matrix)/np.sum(self.confusion_matrix)
 
-    # Iterating through chunks of CHUNK_SIZE images from the training set
-    TRAINING_CHUNK_SIZE = 1000                    # full training set only for preliminary testing (TODO: Set to 1000)
-    NUM_CHUNKS = num_train // TRAINING_CHUNK_SIZE # number of training samples in a single chunk
-    TEST_CHUNK_SIZE = num_test // NUM_CHUNKS
-    for chunk in range(NUM_CHUNKS):
-        # IDEA: RUN EACH ITERATION IN THEIR OWN THREAD, THEY ARE INDEPENDENT OF EACH OTHER.
+class NN(Classifier):
+    """
+    Classifier based on the nearest neighbor rule.
+    """
+    def test(self, num_chunks):
+        if self.trainlab.shape[0] % num_chunks != 0:
+            raise Exception("num_chunks is not evenly disible by the number of training samples")
+        if  self.testlab.shape[0] % num_chunks != 0:
+            raise Exception("num_chunks is not evenly disible by the number of test samples")
 
-        print(f"testing progress: {round(chunk/NUM_CHUNKS*100)}%", end="\r")
-        training_chunk = trainv[TRAINING_CHUNK_SIZE*chunk:TRAINING_CHUNK_SIZE*(chunk+1), 0:vec_size] # chunk slice from full training set
-        test_chunk = testv[TEST_CHUNK_SIZE*chunk:TEST_CHUNK_SIZE*(chunk+1), 0:vec_size]
-        dist = scipy.spatial.distance_matrix(training_chunk, test_chunk)                             # distance vector from test image to chunk
-        for test_sample in range(TEST_CHUNK_SIZE):
-            nn_index = np.argmin(dist[0:TRAINING_CHUNK_SIZE,test_sample])
-            classified_label = trainlab[nn_index+chunk*TRAINING_CHUNK_SIZE,0]
-            actual_label = testlab[test_sample+chunk*TEST_CHUNK_SIZE,0]
-            confusion_matrix[actual_label, classified_label] += 1
-            if misclassified_counter < SELECTION_SIZE and classified_label != actual_label:
-                misclassified_selection[misclassified_counter] = testv[test_sample+chunk*TEST_CHUNK_SIZE, 0:vec_size]
-                misclassified_counter += 1
-                misclassified_labels.append(classified_label)
-            elif correctly_classified_counter < SELECTION_SIZE and classified_label == actual_label:
-                correctly_classified_selection[correctly_classified_counter] = testv[test_sample+chunk*TEST_CHUNK_SIZE, 0:vec_size]
-                correctly_classified_counter += 1
-                correctly_classified_labels.append(classified_label)
-        
-        #if chunk > 5: break # ONLY FOR TESTING 
-    
-    misclassified = (misclassified_selection, misclassified_labels)
-    correctly_classified = (correctly_classified_selection, correctly_classified_labels)
-    return (confusion_matrix, misclassified, correctly_classified)
+        print("Testing 1NN classifier. This may take a few seconds...")
+
+        # each chunk of test samples can be classified in parallell as they the sets are independent
+        # therefore, threads are used to speed up the process.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
+            self.classified_labels = np.concatenate(list(executor.map(
+                self._classify_chunk, 
+                np.split(self.trainv, num_chunks), 
+                np.split(self.testv, num_chunks),
+                np.split(self.trainlab, num_chunks),
+            )))
+        # calculate the confusion matrix
+        self.confusion_matrix = scipy.stats.contingency.crosstab(self.testlab, self.classified_labels).count
+
+    def plot_misclassified(self, selection_size):
+        misclassified_filter = self.classified_labels != self.testlab.flatten()
+        misclassified_labels = self.classified_labels[misclassified_filter] # all misclassified labels
+        misclassified_labels = misclassified_labels[:selection_size]        # selection_size first misclassified labels
+        image_data = self.testv[misclassified_filter, :]                    # all misclassified data
+        image_data = image_data[:selection_size, :]                         # selection_size first misclassified data
+        correct_labels = self.testlab.flatten()[misclassified_filter]
+        correct_labels = correct_labels[:selection_size]
+        self._plot_selection(image_data, misclassified_labels, correct_labels)
+
+    def plot_correctly_classified(self, selection_size):
+        correctly_classified_filter = self.classified_labels == self.testlab
+        correctly_classified_labels = self.classified_labels[correctly_classified_filter] # all correctly classified labels
+        correctly_classified_labels = correctly_classified_labels[:selection_size]        # selection_size first correctly classified labels
+        image_data = self.testv[correctly_classified_filter, :]                           # all correctly classified data
+        image_data = image_data[:selection_size, :]                                       # selection_size first correctly classified data
+        correct_labels = self.testlab[correctly_classified_filter]
+        correct_labels = correct_labels[:selection_size]
+        self._plot_selection(image_data, correctly_classified_labels, correct_labels)
+
+    def _classify_chunk(self, train_subset_data, test_subset_data, train_subset_labels):
+        """
+        Classifies a chunk of the test data according to the nearest neighbor rule
+        on a subset of the training data.
+        """
+        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix
+        nearest_neighbor_index_array = np.argmin(dist, axis=0)                    # find the indexes of the nearest neighbors
+        return np.take(train_subset_labels, nearest_neighbor_index_array)         # classified label is the label of the nearest neighbor
+
+    def _plot_selection(self, data, classified_labels, correct_labels):
+        N_IMAGES = len(data) # must be even
+        Classifier.figure_counter += 1
+        plt.figure(Classifier.figure_counter)
+        for index in range(N_IMAGES):
+            plt.subplot(2, N_IMAGES//2, index+1)
+            square_test_image = np.reshape(data[index], [self.row_size, self.col_size])
+            plt.imshow(square_test_image, interpolation='nearest')
+            plt.title(f"Classified: {classified_labels[index]}\nActual: {correct_labels[index]}")
