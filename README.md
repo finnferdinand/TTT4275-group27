@@ -1,6 +1,11 @@
 # TTT4275 Classification Project
 
-This is the repository for project group 27 in TTT4275 Estimation, Detection and Classification.
+This is the repository for project group 27 in the course TTT4275 Estimation, Detection and Classification.
+It provides a solution to the projects regarding classification of Iris flowers and handwritten digits, using the Python programming language.
+
+## Prerequisites
+
+You need a version of Python newer than 3.6 installed on your system. It can be downloaded [here](https://www.python.org/downloads/).
 
 ## Setup
 
