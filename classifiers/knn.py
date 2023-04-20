@@ -1,14 +1,31 @@
 import numpy as np
 import scipy.spatial
-import scipy.stats.contingency
 import concurrent.futures
 from matplotlib import pyplot as plt
+
 from .classifier import Classifier
 
 class NN(Classifier):
     """
     Classifier based on the nearest neighbor rule.
     """
+
+    def __init__(self, data_path):
+        super().__init__()
+        data_all = scipy.io.loadmat(data_path)
+        self.trainv   = data_all['trainv']             # training data
+        self.trainlab = data_all['trainlab'].flatten() # training labels
+        self.testv    = data_all['testv']              # test data
+        self.testlab  = data_all['testlab'].flatten()  # test labels
+
+        self.num_train = data_all['num_train'][0,0] # number of training samples
+        self.num_test  = data_all['num_test'][0,0]  # number of testing samples
+        self.row_size  = data_all['row_size'][0,0]  # number of rows in a single image
+        self.col_size  = data_all['col_size'][0,0]  # number of columns in a single image
+        self.vec_size  = data_all['vec_size'][0,0]  # number of elements in an image vector
+
+        self.confusion_matrix = np.zeros([self.row_size, self.col_size])
+
     def test(self, num_chunks):
         if self.trainlab.shape[0] % num_chunks != 0:
             raise Exception("num_chunks is not evenly disible by the number of training samples")
@@ -17,8 +34,8 @@ class NN(Classifier):
 
         print("Testing 1NN classifier. This may take a few seconds...")
 
-        # each chunk of test samples can be classified in parallell as they the sets are independent
-        # therefore, threads are used to speed up the process.
+        # each chunk of test samples can be classified in parallell as the sets are independent
+        # therefore, threads are used to test in parallell to speed up the process.
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
             self.classified_labels = np.concatenate(list(executor.map(
                 self._classify_chunk, 
@@ -26,7 +43,6 @@ class NN(Classifier):
                 np.split(self.testv, num_chunks),
                 np.split(self.trainlab, num_chunks),
             )))
-        # calculate the confusion matrix
         self.confusion_matrix = scipy.stats.contingency.crosstab(self.testlab, self.classified_labels).count
 
     def plot_misclassified(self, selection_size):
@@ -59,11 +75,11 @@ class NN(Classifier):
         return np.take(train_subset_labels, nearest_neighbor_index_array)         # classified label is the label of the nearest neighbor
 
     def _plot_selection(self, data, classified_labels, correct_labels):
-        N_IMAGES = len(data) # must be even
+        selection_size = len(data) # must be even
         Classifier.figure_counter += 1
         plt.figure(Classifier.figure_counter)
-        for index in range(N_IMAGES):
-            plt.subplot(2, N_IMAGES//2, index+1)
+        for index in range(selection_size):
+            plt.subplot(2, selection_size//2, index+1)
             square_test_image = np.reshape(data[index], [self.row_size, self.col_size])
             plt.imshow(square_test_image, interpolation='nearest')
             plt.title(f"Classified: {classified_labels[index]}\nActual: {correct_labels[index]}")
