@@ -10,7 +10,7 @@ np.set_printoptions(suppress=True)
 
 print("\n\n----- IRIS -----")
 # linear classifier
-iris_data_path = 'Iris_TTT4275/iris.data'
+iris_data_path = 'data/Iris_TTT4275/iris.data'
 linear_classifier = Linear(iris_data_path)
 linear_classifier.train()
 linear_classifier.test()
@@ -21,7 +21,7 @@ linear_classifier.print_performance()
 
 print("\n\n---- DIGITS ----")
 # 1NN classifier
-digits_data_path = 'MNist_ttt4275/data_all.mat'
+digits_data_path = 'data/MNist_ttt4275/data_all.mat'
 nn_classifier = NN(digits_data_path)
 nn_classifier.test(50)
 

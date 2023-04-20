@@ -28,9 +28,9 @@ class NN(Classifier):
 
     def test(self, num_chunks):
         if self.trainlab.shape[0] % num_chunks != 0:
-            raise Exception("num_chunks is not evenly disible by the number of training samples")
+            raise Exception("num_chunks is not evenly divisible by the number of training samples")
         if  self.testlab.shape[0] % num_chunks != 0:
-            raise Exception("num_chunks is not evenly disible by the number of test samples")
+            raise Exception("num_chunks is not evenly divisible by the number of test samples")
 
         print("Testing 1NN classifier. This may take a few seconds...")
 
