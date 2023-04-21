@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt # remove
+import scipy.stats.contingency
 
 from .classifier import Classifier
 
@@ -23,7 +24,7 @@ class Linear(Classifier):
 
         # training parameters
         self.step_size        = 0.001
-        self.max_iterations   = 1000
+        self.max_iterations   = 10000
         self.threshold        = 0.1
 
     def train(self, training_first = True):
@@ -52,8 +53,8 @@ class Linear(Classifier):
         iteration = 0
         while not terminating_criteria:
             z = self.W @ x
-            g = self.sigmoid(z)                               # eq (20) in Johnson
-            gradient = self.MSEgradient(g, t, x)
+            g = self._sigmoid(z)                               # eq (20) in Johnson
+            gradient = self._MSEgradient(g, t, x)
             self.W = self.W - self.step_size * gradient       # eq (23) in Johnson
             iteration += 1
             mse.append(0.5 * np.sum((g - t) * (g - t), axis=1).sum())
@@ -62,8 +63,13 @@ class Linear(Classifier):
         print("W @ x30:", g[:,30], "=> classified:", np.argmax(g[:,30]), "| true class:", 1)
         print("W @ x60:", g[:,60], "=> classified:", np.argmax(g[:,60]), "| true class:", 2)
         print("terminated at iteration:", iteration-1, "with |grad MSE| =", np.linalg.norm(gradient))
+        self.train_confusion_matrix = scipy.stats.contingency.crosstab(np.argmax(g, axis=0), np.argmax(t, axis=0)).count
+        
+        # TESTING
+        Classifier.figure_counter += 1
+        plt.figure(Classifier.figure_counter)
         plt.plot(mse)
-        plt.show()        
+        plt.title("MSE")
 
     def test(self):
         pass
@@ -79,11 +85,24 @@ class Linear(Classifier):
         print(self.test_confusion_matrix)
         print(f"Detection rate: {round(self._get_detection_rate(self.test_confusion_matrix)*100, 2)}%")
     
+    def plot_histograms(self):
+        print(self.data.shape)
+        Classifier.figure_counter += 1
+        plt.figure(Classifier.figure_counter)
+        counter = 0
+        for c in range(self.num_classes):
+            for feature in range(self.num_features):
+                counter += 1
+                plt.subplot(self.num_classes, self.num_features, counter)
+                plt.hist(self.data[c*self.per_class:(c+1)*self.per_class, feature], bins=20, range=[0,8])
+                if c == 0: plt.title("Feature: " + str(feature))
+                if feature == 0: plt.ylabel("Class: " + str(c))
+
     def _get_detection_rate(self, confusion_matrix):
         return np.trace(confusion_matrix) / np.sum(confusion_matrix)
 
     # helper functions for training
-    def MSEgradient(self, g, t, x):
+    def _MSEgradient(self, g, t, x):
         return (g - t) * g * (1 - g) @ x.T   # eq (22) in Johnson
         # SIGNIFICANTLY SLOWER ALTERNATIVE:
         # gradient = np.zeros([self.num_classes, self.num_features + 1])
@@ -91,5 +110,5 @@ class Linear(Classifier):
         #     gradient += (g[:,k:k+1] - t[:,k:k+1]) * g[:,k:k+1] * (1 - g[:,k:k+1]) @ x[:,k:k+1].T
         # return gradient
 
-    def sigmoid(self, z):
+    def _sigmoid(self, z):
         return 1 / (1 + np.exp(-z))          # eq (20) in Johnson

@@ -1,4 +1,3 @@
-import scipy.io
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -15,10 +14,12 @@ if __name__ == "__main__":
     print("----- IRIS -----")    
     print("Using first 30 as training set and last 20 as testing set")    
     linear_classifier = Linear(iris_data_path)
-    linear_classifier.train()
+    linear_classifier.train(training_first=True)
     linear_classifier.test()
     linear_classifier.print_performance()
+    linear_classifier.plot_histograms()
 
+    plt.show()
     exit(0) # skipping working on linear classifier
 
     print("Using first 20 as training set and last 30 as testing set")    
