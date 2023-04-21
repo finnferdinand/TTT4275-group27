@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt # remove
 
 from .classifier import Classifier
 
@@ -21,11 +22,12 @@ class Linear(Classifier):
         self.test_confusion_matrix  = np.zeros([self.num_classes, self.num_classes])
 
         # training parameters
-        self.step_size        = 0.02
+        self.step_size        = 0.001
         self.max_iterations   = 1000
-        self.threshold        = 0.01
+        self.threshold        = 0.1
 
     def train(self, training_first = True):
+        print("Testing linear classifier...")
         if training_first: # select first subset as training set and last as test set
             self.trainv   = self.data[[row + self.per_class * c for row in range(self.num_train) for c in range(self.num_classes)],:]
             self.trainlab = self.labels[[row + self.per_class * c for row in range(self.num_train) for c in range(self.num_classes)]]
@@ -37,29 +39,37 @@ class Linear(Classifier):
             self.trainv   = self.data[[self.num_test + row + self.per_class * c for row in range(self.num_train) for c in range(self.num_classes)],:]
             self.trainlab = self.labels[[self.num_test + row + self.per_class * c for row in range(self.num_train) for c in range(self.num_classes)]]
 
-        t = np.asarray([np.eye(1, self.num_classes, c).flatten() for c in range(self.num_classes) for _ in range(self.num_train)]).transpose()
-        self.W = np.random.uniform(low=-1, high=1, size=(self.num_classes, self.num_features + 1))
+        t = np.asarray([np.eye(1, self.num_classes, c).flatten()     # t = [ 1 1 ... 0 0 ... 0 0
+                        for c in range(self.num_classes)             #       0 0 ... 1 1 ... 0 0
+                        for _ in range(self.num_train)]).transpose() #       0 0 ... 0 0 ... 1 1 ]
+        x = np.hstack((self.trainv, np.ones((self.num_train * self.num_classes, 1)))).transpose() # transformation [x^T 1]^T -> x
+        #self.W = np.random.randn(self.num_classes, self.num_features + 1)
+        self.W = np.zeros([self.num_classes, self.num_features + 1])
+
+        mse = []
 
         terminating_criteria = False
         iteration = 0
         while not terminating_criteria:
-            x = np.hstack((self.trainv, np.ones((self.num_train * self.num_classes, 1)))).transpose() # transformation [x^T 1]^T -> x
             z = self.W @ x
-            g = sigmoid(z)                                                                            # eq (20) in Johnson
-            gradient = MSEgradient(g, t, x)
-            self.W = self.W - self.step_size * gradient                                               # eq (23) in Johnson
-            terminating_criteria = iteration > self.max_iterations or np.linalg.norm(gradient) < self.threshold
+            g = self.sigmoid(z)                               # eq (20) in Johnson
+            gradient = self.MSEgradient(g, t, x)
+            self.W = self.W - self.step_size * gradient       # eq (23) in Johnson
             iteration += 1
-            if terminating_criteria:
-                print(gradient)
-                print(sigmoid(self.W @ x))
-                print(np.linalg.norm(gradient))
-                print(iteration)
+            mse.append(0.5 * np.sum((g - t) * (g - t), axis=1).sum())
+            terminating_criteria = iteration > self.max_iterations or mse[iteration - 1] < self.threshold
+        print("W @ x0:", g[:,0], "=> classified:", np.argmax(g[:,0]), "| true class:", 0)
+        print("W @ x30:", g[:,30], "=> classified:", np.argmax(g[:,30]), "| true class:", 1)
+        print("W @ x60:", g[:,60], "=> classified:", np.argmax(g[:,60]), "| true class:", 2)
+        print("terminated at iteration:", iteration-1, "with |grad MSE| =", np.linalg.norm(gradient))
+        plt.plot(mse)
+        plt.show()        
 
     def test(self):
         pass
 
     def print_performance(self):
+        print("\n~~ PERFORMANCE ~~")
         print("TRAINING SET")
         print("Confusion Matrix:")
         print(self.train_confusion_matrix)
@@ -70,11 +80,16 @@ class Linear(Classifier):
         print(f"Detection rate: {round(self._get_detection_rate(self.test_confusion_matrix)*100, 2)}%")
     
     def _get_detection_rate(self, confusion_matrix):
-        return np.trace(confusion_matrix)/np.sum(confusion_matrix)
+        return np.trace(confusion_matrix) / np.sum(confusion_matrix)
 
-# helper functions for training
-def MSEgradient(g, t, x):
-        return (g - t) * g * (1 - g) @ np.transpose(x)               # eq (22) in Johnson
+    # helper functions for training
+    def MSEgradient(self, g, t, x):
+        return (g - t) * g * (1 - g) @ x.T   # eq (22) in Johnson
+        # SIGNIFICANTLY SLOWER ALTERNATIVE:
+        # gradient = np.zeros([self.num_classes, self.num_features + 1])
+        # for k in range(self.num_train * self.num_classes):
+        #     gradient += (g[:,k:k+1] - t[:,k:k+1]) * g[:,k:k+1] * (1 - g[:,k:k+1]) @ x[:,k:k+1].T
+        # return gradient
 
-def sigmoid(z):
-        return 1 / (1 + np.exp(-z))                                  # eq (20) in Johnson
+    def sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))          # eq (20) in Johnson

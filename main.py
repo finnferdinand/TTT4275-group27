@@ -12,7 +12,7 @@ iris_data_path = 'data/Iris_TTT4275/iris.data'
 digits_data_path = 'data/MNist_ttt4275/data_all.mat'
 
 if __name__ == "__main__":
-    print("\n\n----- IRIS -----")    
+    print("----- IRIS -----")    
     print("Using first 30 as training set and last 20 as testing set")    
     linear_classifier = Linear(iris_data_path)
     linear_classifier.train()
