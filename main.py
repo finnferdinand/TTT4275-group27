@@ -6,34 +6,38 @@ from classifiers.knn import NN
 from classifiers.linear import Linear
 
 np.set_printoptions(suppress=True)
+np.random.seed(1) # set seed for debugging purposes
 
-
-print("\n\n----- IRIS -----")
-# linear classifier
 iris_data_path = 'data/Iris_TTT4275/iris.data'
-linear_classifier = Linear(iris_data_path)
-linear_classifier.train()
-linear_classifier.test()
-
-# performance
-linear_classifier.print_performance()
-
-
-print("\n\n---- DIGITS ----")
-# 1NN classifier
 digits_data_path = 'data/MNist_ttt4275/data_all.mat'
-nn_classifier = NN(digits_data_path)
-nn_classifier.test(50)
 
-# performance
-nn_classifier.print_performance()
+if __name__ == "__main__":
+    print("\n\n----- IRIS -----")    
+    print("Using first 30 as training set and last 20 as testing set")    
+    linear_classifier = Linear(iris_data_path)
+    linear_classifier.train()
+    linear_classifier.test()
+    linear_classifier.print_performance()
 
-# plot a selection of misclassified and correctly classified test samples
-selection_size = 10
-nn_classifier.plot_misclassified(selection_size)
-nn_classifier.plot_correctly_classified(selection_size)
+    exit(0) # skipping working on linear classifier
 
-# TODO: KNN classifier
+    print("Using first 20 as training set and last 30 as testing set")    
+    linear_classifier = Linear(iris_data_path)
+    linear_classifier.train(training_first=False)
+    linear_classifier.test()
+    linear_classifier.print_performance()
+
+    print("\n\n---- DIGITS ----")
+    print("Using full traning set as templates")
+    nn_classifier = NN(digits_data_path)
+    nn_classifier.test(num_chunks=50)
+    nn_classifier.print_performance()
+    # plot a selection of misclassified and correctly classified test samples
+    selection_size = 10
+    nn_classifier.plot_misclassified(selection_size)
+    nn_classifier.plot_correctly_classified(selection_size)
+
+    # TODO: KNN classifier
 
 
-plt.show()
+    plt.show()

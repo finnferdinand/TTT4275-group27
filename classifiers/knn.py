@@ -37,6 +37,8 @@ class NN(Classifier):
         # each chunk of test samples can be classified in parallell as the sets are independent
         # therefore, threads are used to test in parallell to speed up the process.
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
+            # executor.map(args) returns a list of classified labels for each chunk in order
+            # all classified labels are then collected in a single numpy array by concatenating this list of arrays
             self.classified_labels = np.concatenate(list(executor.map(
                 self._classify_chunk, 
                 np.split(self.trainv, num_chunks), 
