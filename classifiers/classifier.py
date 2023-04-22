@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.stats.contingency
+from matplotlib import pyplot as plt
 
 class Classifier(object):
     """
@@ -18,3 +18,7 @@ class Classifier(object):
 
     def _get_detection_rate(self):
         return np.trace(self.confusion_matrix)/np.sum(self.confusion_matrix)
+
+    def new_figure(self):
+        Classifier.figure_counter += 1
+        plt.figure(Classifier.figure_counter)

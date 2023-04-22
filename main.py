@@ -20,7 +20,7 @@ if __name__ == "__main__":
     linear_classifier.plot_histograms()
 
     plt.show()
-    exit(0) # skipping working on linear classifier
+    exit(0) # skipping digits while working on lin. classifier
 
     print("Using first 20 as training set and last 30 as testing set")    
     linear_classifier = Linear(iris_data_path)

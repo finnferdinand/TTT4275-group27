@@ -78,8 +78,7 @@ class NN(Classifier):
 
     def _plot_selection(self, data, classified_labels, correct_labels):
         selection_size = len(data) # must be even
-        Classifier.figure_counter += 1
-        plt.figure(Classifier.figure_counter)
+        super().new_figure()
         for index in range(selection_size):
             plt.subplot(2, selection_size//2, index+1)
             square_test_image = np.reshape(data[index], [self.row_size, self.col_size])
