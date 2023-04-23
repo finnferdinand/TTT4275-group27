@@ -5,6 +5,7 @@ from datasets.irisdataset import IrisDataSet
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
+__license__ = "MIT"
 
 iris_data_path = 'datasets/data/Iris_TTT4275/iris.data'
 

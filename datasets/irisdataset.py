@@ -4,6 +4,7 @@ import numpy as np
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
+__license__ = "MIT"
 
 class IrisDataSet(object):
     def __init__(self, data_path, train_test_ratio):

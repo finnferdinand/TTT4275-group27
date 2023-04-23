@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
+__license__ = "MIT"
 
 class Classifier(object):
     figure_counter = 0

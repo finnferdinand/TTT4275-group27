@@ -5,6 +5,7 @@ from datasets.mnistdataset import MNISTDataSet
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
+__license__ = "MIT"
 
 digits_data_path = 'datasets/data/MNist_ttt4275/data_all.mat'
 

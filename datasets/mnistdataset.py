@@ -4,6 +4,7 @@ import scipy.io
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
+__license__ = "MIT"
 
 class MNISTDataSet(object):
     def __init__(self, data_path):

@@ -15,6 +15,7 @@ from .classifier import Classifier
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
 __credits__ = ["Magne H. Johnson"]
+__license__ = "MIT"
 
 class NN(Classifier):
     def __init__(self, dataset):
