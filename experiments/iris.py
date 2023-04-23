@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from classifiers.linear import Linear
+from datasets.irisdataset import IrisDataSet
+
+__author__ = "Finn Ferdinand Sandvand and Christian Le"
+__copyright__ = "Copyright 2023"
+
+iris_data_path = 'datasets/data/Iris_TTT4275/iris.data'
+
+def iris():
+    print("------------------------- IRIS -------------------------")  
+    print("Using first 30 as training set and last 20 as testing set")    
+    linear_classifier = Linear(
+        IrisDataSet(data_path = iris_data_path, train_test_ratio = 3 / 5), 
+        Linear.Configuration(step_size = 0.005, max_iterations = 1000, threshold = 0.5),
+    )
+    linear_classifier.train(training_first = True)
+    linear_classifier.test()
+    linear_classifier.print_performance()
+
+    # Inspecting dataset
+    linear_classifier.plot_histograms()
+
+    print("\nUsing last 30 as training set and first 20 as testing set")    
+    linear_classifier.train(training_first = False)
+    linear_classifier.test()
+    linear_classifier.print_performance()
+
+    print("\nRemoved most overlapping feature")    
+    linear_classifier.train(training_first = True, selected_features=[0,2,3])
+    linear_classifier.test()
+    linear_classifier.print_performance()
+
+    print("\nRemoved 2 most overlapping feature")    
+    linear_classifier.train(training_first = True, selected_features=[2,3])
+    linear_classifier.test()
+    linear_classifier.print_performance()
+
+    print("\nRemoved 3 most overlapping feature")    
+    linear_classifier.train(training_first = True, selected_features=[3])
+    linear_classifier.test()
+    linear_classifier.print_performance()

@@ -5,7 +5,9 @@ It provides a solution to the projects regarding classification of Iris flowers 
 
 ## Prerequisites
 
-You need a version of Python newer than 3.6 installed on your system. It can be downloaded [here](https://www.python.org/downloads/).
+You need a version of Python newer than 3.6 installed on your system 
+(the project was developed using Python 3.8.9). 
+Python can be downloaded [here](https://www.python.org/downloads/).
 
 ## Setup
 

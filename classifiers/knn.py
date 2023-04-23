@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+"""
+Classifier based on the nearest neighbor decision rule.
+It uses the methods described in Johnson, Magne H.; Classification 
+(2017) pp. 10 & 18-20.
+"""
+
 import numpy as np
 import scipy.spatial
 import concurrent.futures
@@ -5,11 +12,11 @@ from matplotlib import pyplot as plt
 
 from .classifier import Classifier
 
-class NN(Classifier):
-    """
-    Classifier based on the nearest neighbor rule.
-    """
+__author__ = "Finn Ferdinand Sandvand and Christian Le"
+__copyright__ = "Copyright 2023"
+__credits__ = ["Magne H. Johnson"]
 
+class NN(Classifier):
     def __init__(self, dataset):
         super().__init__()
         self.dataset          = dataset
@@ -40,7 +47,7 @@ class NN(Classifier):
         misclassified_filter = self.classified_labels != self.dataset.testlab.flatten()
         misclassified_labels = self.classified_labels[misclassified_filter] # all misclassified labels
         misclassified_labels = misclassified_labels[:selection_size]        # selection_size first misclassified labels
-        image_data = self.dataset.testv[misclassified_filter, :]                    # all misclassified data
+        image_data = self.dataset.testv[misclassified_filter, :]            # all misclassified data
         image_data = image_data[:selection_size, :]                         # selection_size first misclassified data
         correct_labels = self.dataset.testlab.flatten()[misclassified_filter]
         correct_labels = correct_labels[:selection_size]
@@ -50,7 +57,7 @@ class NN(Classifier):
         correctly_classified_filter = self.classified_labels == self.dataset.testlab
         correctly_classified_labels = self.classified_labels[correctly_classified_filter] # all correctly classified labels
         correctly_classified_labels = correctly_classified_labels[:selection_size]        # selection_size first correctly classified labels
-        image_data = self.dataset.testv[correctly_classified_filter, :]                           # all correctly classified data
+        image_data = self.dataset.testv[correctly_classified_filter, :]                   # all correctly classified data
         image_data = image_data[:selection_size, :]                                       # selection_size first correctly classified data
         correct_labels = self.dataset.testlab[correctly_classified_filter]
         correct_labels = correct_labels[:selection_size]

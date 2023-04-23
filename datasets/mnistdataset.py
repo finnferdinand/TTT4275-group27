@@ -1,4 +1,9 @@
+#!/usr/bin/env python
+
 import scipy.io
+
+__author__ = "Finn Ferdinand Sandvand and Christian Le"
+__copyright__ = "Copyright 2023"
 
 class MNISTDataSet(object):
     def __init__(self, data_path):
