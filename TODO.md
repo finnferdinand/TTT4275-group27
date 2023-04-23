@@ -4,6 +4,7 @@
 - [x] Test linear classifier (iris)
 - [x] Test/train for flipped data set (iris)
 - [x] Produce histograms (iris)
+- [ ] Subclasses for parameters and data set? (iris)
 - [ ] Reduced feature classifier (iris)
 - [ ] Clustering (digits)
 - [ ] KNN classifier (digits)
