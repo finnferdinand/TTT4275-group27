@@ -59,7 +59,7 @@ class Linear(Classifier):
             gradient = self._MSEgradient(g, t, x)
             self.W = self.W - self.configuration.step_size * gradient # eq (23) in Johnson
             iteration += 1
-            mse = 0.5 * np.sum((g - t).T @ (g - t), axis=1).sum()       # eq (19) in Johnson
+            mse = 0.5 * np.sum(np.sum((g - t) * (g - t), axis=1))       # eq (19) in Johnson
             self.mse.append(mse)
             terminating_criteria = iteration > self.configuration.max_iterations \
                                  or np.linalg.norm(gradient) < self.configuration.threshold
