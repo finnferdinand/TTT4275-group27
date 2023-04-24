@@ -2,7 +2,7 @@
 """
 Classifier based on a linear decision rule, using gradient descent
 training with a minimum mean square error cost function.
-It uses the methods described in Johnson, Magne H.; Classification 
+It uses the methods described in Johnsen, Magne H.; Classification 
 (2017) pp. 9-10 & 15-18.
 
 Equations are implemented as described in Johnson, however, in
@@ -20,7 +20,7 @@ from .classifier import Classifier
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
-__credits__ = ["Magne H. Johnson"]
+__credits__ = ["Magne H. Johnsen"]
 __license__ = "MIT"
 
 class Linear(Classifier):
