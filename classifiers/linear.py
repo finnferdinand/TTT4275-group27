@@ -5,7 +5,7 @@ training with a minimum mean square error cost function.
 It uses the methods described in Johnsen, Magne H.; Classification 
 (2017) pp. 9-10 & 15-18.
 
-Equations are implemented as described in Johnson, however, in
+Equations are implemented as described in Johnsen, however, in
 order to speed up computation time and for shorter notation
 the vectors g_k, t_k, and x_k have been converted into the matrices
 g, t, and x containing the values for all k. This avoids using
@@ -26,7 +26,7 @@ __license__ = "MIT"
 class Linear(Classifier):
     class Configuration(object):
         def __init__(self, step_size, max_iterations, threshold):
-            self.step_size        = step_size      # alpha as in eq (23) in Johnson
+            self.step_size        = step_size      # alpha as in eq (23) in Johnsen
             self.max_iterations   = max_iterations # maximum number of iterations
             self.threshold        = threshold      # terminate training if ||grad MSE|| < this number
 
@@ -45,21 +45,22 @@ class Linear(Classifier):
             self.dataset.select_features(selected_features)   
 
         t = np.kron(np.eye(self.dataset.num_classes), np.ones(self.dataset.num_train))
-        x = np.hstack((self.dataset.trainv, 
-                       np.ones((self.dataset.num_train * self.dataset.num_classes, 1))
-                       )).transpose()                                                  # transformation [x^T 1]^T -> x
-        self.W = np.zeros([self.dataset.num_classes, self.dataset.num_features + 1])   # initialize as (C,D+1) zero matrix
+        x = np.hstack((self.dataset.trainv,                                            # 'trainv' is the equivalent to x^T
+                       np.ones((len(self.dataset.trainv), 1))                          # transformation [x^T 1]^T -> x
+                       )).transpose()
+        self.W = np.zeros([self.dataset.num_classes,                                   # initialize as (C,D+1) zero matrix
+                        self.dataset.num_features + 1])                                # as W is Cx(D+1)
         self.mse = []
 
         terminating_criteria = False
         iteration = 0
         while not terminating_criteria:
             z = self.W @ x
-            g = self._sigmoid(z)                                      # eq (20) in Johnson
+            g = self._sigmoid(z)                                      # eq (20) in Johnsen
             gradient = self._MSEgradient(g, t, x)
-            self.W = self.W - self.configuration.step_size * gradient # eq (23) in Johnson
+            self.W = self.W - self.configuration.step_size * gradient # eq (23) in Johnsen
             iteration += 1
-            mse = 0.5 * np.sum(np.sum((g - t) * (g - t), axis=1))       # eq (19) in Johnson
+            mse = 0.5 * np.sum(np.sum((g - t) * (g - t), axis=1))       # eq (19) in Johnsen
             self.mse.append(mse)
             terminating_criteria = iteration > self.configuration.max_iterations \
                                  or np.linalg.norm(gradient) < self.configuration.threshold
@@ -106,8 +107,8 @@ class Linear(Classifier):
 
     # helper functions for training
     def _MSEgradient(self, g, t, x):
-        return (g - t) * g * (1 - g) @ x.T  # eq (22) in Johnson, rewritten with g, t, and x matrices 
+        return (g - t) * g * (1 - g) @ x.transpose()  # eq (22) in Johnsen, rewritten with g, t, and x matrices 
                                             # for significantly shorter comutation time
 
     def _sigmoid(self, z):
-        return 1 / (1 + np.exp(-z))         # eq (20) in Johnson
+        return 1 / (1 + np.exp(-z))         # eq (20) in Johnsen
