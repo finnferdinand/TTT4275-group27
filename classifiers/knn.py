@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Classifier based on the nearest neighbor decision rule.
-It uses the methods described in Johnson, Magne H.; Classification 
+It uses the methods described in Johnsen, Magne H.; Classification 
 (2017) pp. 10 & 18-20.
 """
 
@@ -14,7 +14,7 @@ from .classifier import Classifier
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
 __copyright__ = "Copyright 2023"
-__credits__ = ["Magne H. Johnson"]
+__credits__ = ["Magne H. Johnsen"]
 __license__ = "MIT"
 
 class NN(Classifier):
@@ -69,9 +69,9 @@ class NN(Classifier):
         Classifies a chunk of the test data according to the nearest neighbor rule
         on a subset of the training data.
         """
-        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix
-        nearest_neighbor_index_array = np.argmin(dist, axis=0)                    # find the indexes of the nearest neighbors
-        return np.take(train_subset_labels, nearest_neighbor_index_array)         # classified label is the label of the nearest neighbor
+        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix (distance from train_i to test_j)
+        nearest_neighbor_index_array = np.argmin(dist, axis=0)                    # find the indexes of the nearest neighbors (for each test_j, which train_i has shortest distance)
+        return np.take(train_subset_labels, nearest_neighbor_index_array)         # classified label is the label of the nearest neighbour 
 
     def _plot_selection(self, data, classified_labels, correct_labels):
         selection_size = len(data) # must be even
