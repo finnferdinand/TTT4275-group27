@@ -8,6 +8,8 @@ It uses the methods described in Johnsen, Magne H.; Classification
 import numpy as np
 import scipy.spatial
 import concurrent.futures
+
+from sklearn.cluster import KMeans
 from matplotlib import pyplot as plt
 
 from .classifier import Classifier
@@ -23,29 +25,49 @@ class NN(Classifier):
         self.dataset          = dataset
         self.confusion_matrix = np.zeros([self.dataset.row_size, self.dataset.col_size])
 
-    def test(self, num_chunks):
-        if self.dataset.trainlab.shape[0] % num_chunks != 0:
+    def test(self, num_chunks, num_clusters = None, k=1):
+        if self.dataset.trainlab.shape[0] % num_chunks != 0 and num_clusters is None:
             raise Exception("num_chunks is not evenly divisible by the number of training samples")
-        if  self.dataset.testlab.shape[0] % num_chunks != 0:
+        if self.dataset.testlab.shape[0] % num_chunks != 0 and num_clusters is None:
             raise Exception("num_chunks is not evenly divisible by the number of test samples")
+        print("Testing " + str(k) + "NN classifier. This may take a few seconds...")
 
-        print("Testing 1NN classifier. This may take a few seconds...")
+        extended_k = (np.ones(num_chunks)*k).astype(int)
 
+        if num_clusters is None:
         # each chunk of test samples can be classified in parallell as the sets are independent
         # therefore, threads are used to test in parallell to speed up the process.
-        with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
-            # executor.map(args) returns a list of classified labels for each chunk in order
-            # all classified labels are then collected in a single numpy array by concatenating this list of arrays
-            self.classified_labels = np.concatenate(list(executor.map(
-                self._classify_chunk, 
-                np.split(self.dataset.trainv, num_chunks), 
-                np.split(self.dataset.testv, num_chunks),
-                np.split(self.dataset.trainlab, num_chunks),
-            )))
-        self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
+                # executor.map(args) returns a list of classified labels for each chunk in order
+                # all classified labels are then collected in a single numpy array by concatenating this list of arrays
+                self.classified_labels = np.concatenate(list(executor.map(
+                    self._classify_chunk, 
+                    np.split(self.dataset.trainv, num_chunks), 
+                    np.split(self.dataset.testv, num_chunks),
+                    np.split(self.dataset.trainlab, num_chunks),
+                    extended_k
+                )))
+        else:
+            if num_clusters % num_chunks != 0:
+                raise Exception("num_chunks is not evenly divisible by the number of clusters")
+            self._clustering(num_clusters)
 
+            extended_C = np.kron(np.ones((num_chunks, 1)), self.C).astype(int)
+            extended_clabel = np.kron(np.ones(num_chunks), self.clabel).astype(int)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
+                self.classified_labels = np.concatenate(list(executor.map(
+                    self._classify_chunk, 
+                    np.split(extended_C, num_chunks),
+                    np.split(self.dataset.testv, num_chunks),
+                    np.split(extended_clabel, num_chunks),
+                    extended_k
+                )))
+
+        self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
+    
     def plot_misclassified(self, selection_size):
-        misclassified_filter = self.classified_labels != self.dataset.testlab.flatten()
+        misclassified_filter = self.classified_labels != self.dataset.testlab
         misclassified_labels = self.classified_labels[misclassified_filter] # all misclassified labels
         misclassified_labels = misclassified_labels[:selection_size]        # selection_size first misclassified labels
         image_data = self.dataset.testv[misclassified_filter, :]            # all misclassified data
@@ -64,14 +86,38 @@ class NN(Classifier):
         correct_labels = correct_labels[:selection_size]
         self._plot_selection(image_data, correctly_classified_labels, correct_labels)
 
-    def _classify_chunk(self, train_subset_data, test_subset_data, train_subset_labels):
+    def _clustering(self, num_clusters):
+        #self.idx= np.empty((1, 0))
+        self.clabel = np.empty((1, 0), dtype=int)
+        self.C = np.empty((0, self.dataset.vec_size), dtype=int)
+        for c in range(self.dataset.num_classes):
+            print("Clustering class: " + str(c) + "...")
+            class_filter = c == self.dataset.trainlab
+            data_from_class = self.dataset.trainv[class_filter, :]
+            kmeans = KMeans(n_clusters=num_clusters, n_init=1).fit(data_from_class)
+            # self.idx = np.append(self.idx, kmeans.labels_)
+            self.clabel = np.append(self.clabel, c * np.ones(num_clusters).astype(int))
+            self.C = np.vstack((self.C, kmeans.cluster_centers_.astype(int)))
+
+    def _classify_chunk(self, train_subset_data, test_subset_data, train_subset_labels, k):
         """
         Classifies a chunk of the test data according to the nearest neighbor rule
         on a subset of the training data.
         """
         dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix (distance from train_i to test_j)
-        nearest_neighbor_index_array = np.argmin(dist, axis=0)                    # find the indexes of the nearest neighbors (for each test_j, which train_i has shortest distance)
-        return np.take(train_subset_labels, nearest_neighbor_index_array)         # classified label is the label of the nearest neighbour 
+        nearest_neighbor_index_array = np.argpartition(dist, k, axis=0)[:k]
+        #nearest_neighbor_index_array = np.asarray(np.argmin(dist, axis=0))                # find the indexes of the nearest neighbors (for each test_j, which train_i has shortest distance)
+        knn_matrix = np.empty((0,len(test_subset_data)), dtype=int)
+        nn_result = np.empty((1,0))
+        for i in range(k):
+            knn_matrix = np.vstack((knn_matrix, np.take(train_subset_labels, nearest_neighbor_index_array[i])))
+        for col in knn_matrix.transpose():
+            label_freq = np.bincount(col)
+            nn_result = np.append(nn_result, np.argmax(label_freq))
+        
+        # print(nn_result.shape)
+        #return np.take(train_subset_labels, nearest_neighbor_index_array[0])         # classified label is the label of the nearest neighbour 
+        return nn_result.astype(int)
 
     def _plot_selection(self, data, classified_labels, correct_labels):
         selection_size = len(data) # must be even

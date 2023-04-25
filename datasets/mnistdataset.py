@@ -19,3 +19,5 @@ class MNISTDataSet(object):
         self.row_size  = data_all['row_size'][0,0]     # number of rows in a single image
         self.col_size  = data_all['col_size'][0,0]     # number of columns in a single image
         self.vec_size  = data_all['vec_size'][0,0]     # number of elements in an image vector
+        self.num_classes = 10
+        
