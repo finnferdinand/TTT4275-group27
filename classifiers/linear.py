@@ -6,10 +6,11 @@ It uses the methods described in Johnsen, Magne H.; Classification
 (2017) pp. 9-10 & 15-18.
 
 Equations are implemented as described in Johnsen, however, in
-order to speed up computation time and for shorter notation
-the vectors g_k, t_k, and x_k have been converted into the matrices
-g, t, and x containing the values for all k. This avoids using
-sums and for loops many places, which are computationally expensive.
+order to speed up computation time and for shorter notation the 
+vectors g_k, t_k, and x_k have been converted into the matrices
+G, T, and X containing the values for all training samples. This 
+avoids using sums and for loops many places, which are computationally 
+expensive.
 """
 
 import numpy as np
@@ -26,9 +27,9 @@ __license__ = "MIT"
 class Linear(Classifier):
     class Configuration(object):
         def __init__(self, step_size, max_iterations, threshold):
-            self.step_size        = step_size      # alpha as in eq (23) in Johnsen
-            self.max_iterations   = max_iterations # maximum number of iterations
-            self.threshold        = threshold      # terminate training if ||grad MSE|| < this number
+            self.step_size      = step_size      # alpha as in eq (23) in Johnsen
+            self.max_iterations = max_iterations # maximum number of iterations
+            self.threshold      = threshold      # terminate training if ||grad MSE|| < this number
 
     def __init__(self, dataset, configuration):
         super().__init__()
@@ -36,7 +37,7 @@ class Linear(Classifier):
         self.dataset                = dataset
         self.train_confusion_matrix = np.zeros([self.dataset.num_classes, self.dataset.num_classes])
         self.test_confusion_matrix  = np.zeros([self.dataset.num_classes, self.dataset.num_classes])
-        self.mse                    = []
+        self.mean_square_error      = []
 
     def train(self, training_first = True, selected_features = None):
         print("Training linear classifier...")
@@ -44,39 +45,38 @@ class Linear(Classifier):
         if selected_features is not None:
             self.dataset.select_features(selected_features)   
 
-        t = np.kron(np.eye(self.dataset.num_classes), np.ones(self.dataset.num_train))
-        x = np.hstack((self.dataset.trainv,                                            # 'trainv' is the equivalent to x^T
-                       np.ones((len(self.dataset.trainv), 1))                          # transformation [x^T 1]^T -> x
-                       )).transpose()
-        self.W = np.zeros([self.dataset.num_classes,                                   # initialize as (C,D+1) zero matrix
-                        self.dataset.num_features + 1])                                # as W is Cx(D+1)
-        self.mse = []
+        T = np.kron(np.eye(self.dataset.num_classes), np.ones(self.dataset.num_train)) # template vector
+        X = np.hstack((self.dataset.trainv, 
+                       np.ones((self.dataset.num_train * self.dataset.num_classes, 1)) # 'trainv' is the equivalent to x^T
+                       )).transpose()                                                  # transformation [x^T 1]^T -> x
+        self.W = np.zeros([self.dataset.num_classes, self.dataset.num_features + 1])   # initialize as (C,D+1) zero matrix
+        self.mean_square_error = []
 
-        terminating_criteria = False
         iteration = 0
+        terminating_criteria = False
         while not terminating_criteria:
-            z = self.W @ x
-            g = self._sigmoid(z)                                      # eq (20) in Johnsen
-            gradient = self._MSEgradient(g, t, x)
+            Z = self.W @ X
+            G = self._sigmoid(Z)                                      # eq (20) in Johnsen
+            gradient = self._MSEgradient(G, T, X)
             self.W = self.W - self.configuration.step_size * gradient # eq (23) in Johnsen
+            mse = 0.5 * np.linalg.norm(G - T)                         # eq (19) in Johnsen
+            self.mean_square_error.append(mse)
             iteration += 1
-            mse = 0.5 * np.sum(np.sum((g - t) * (g - t), axis=1))       # eq (19) in Johnsen
-            self.mse.append(mse)
             terminating_criteria = iteration > self.configuration.max_iterations \
                                  or np.linalg.norm(gradient) < self.configuration.threshold
 
         print(f"Training terminated at iteration: {iteration-1}, with ||grad MSE|| = {round(np.linalg.norm(gradient),2)}")
-        self.train_confusion_matrix = scipy.stats.contingency.crosstab(np.argmax(g, axis=0), np.argmax(t, axis=0)).count
+        self.train_confusion_matrix = scipy.stats.contingency.crosstab(np.argmax(G, axis=0), np.argmax(T, axis=0)).count
 
     def test(self):
         print("Testing linear classifier...")
-        t = np.kron(np.eye(self.dataset.num_classes), np.ones(self.dataset.num_test))
-        x = np.hstack((self.dataset.testv, 
+        T = np.kron(np.eye(self.dataset.num_classes), np.ones(self.dataset.num_test)) # template vector
+        X = np.hstack((self.dataset.testv, 
                        np.ones((self.dataset.num_test * self.dataset.num_classes, 1))
-                       )).transpose()                                       # transformation [x^T 1]^T -> x
-        z = self.W @ x
-        g = self._sigmoid(z)
-        self.test_confusion_matrix = scipy.stats.contingency.crosstab(np.argmax(g, axis=0), np.argmax(t, axis=0)).count
+                       )).transpose()                                                 # transformation [x^T 1]^T -> x
+        Z = self.W @ X
+        G = self._sigmoid(Z)
+        self.test_confusion_matrix = scipy.stats.contingency.crosstab(np.argmax(G, axis=0), np.argmax(T, axis=0)).count
 
     def print_performance(self):
         print("\n~~ PERFORMANCE ~~")
@@ -102,13 +102,13 @@ class Linear(Classifier):
 
     def plot_MSE(self):
         super().new_figure()
-        plt.plot(self.mse)
+        plt.plot(self.mean_square_error)
         plt.title("MSE")
 
     # helper functions for training
-    def _MSEgradient(self, g, t, x):
-        return (g - t) * g * (1 - g) @ x.transpose()  # eq (22) in Johnsen, rewritten with g, t, and x matrices 
-                                            # for significantly shorter comutation time
+    def _MSEgradient(self, G, T, X):
+        return ((G - T) * G * (1 - G)) @ X.T  # eq (22) in Johnsen, rewritten with g, t, and x matrices 
+                                              # for significantly shorter comutation time
 
     def _sigmoid(self, z):
         return 1 / (1 + np.exp(-z))         # eq (20) in Johnsen

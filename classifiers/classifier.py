@@ -14,7 +14,7 @@ class Classifier(object):
     figure_counter = 0
 
     def __init__(self):
-        np.set_printoptions(suppress=True)
+        np.set_printoptions(suppress = True)
         self.confusion_matrix = None
         self.classified_labels = None
 

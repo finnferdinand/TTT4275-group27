@@ -10,8 +10,8 @@ __license__ = "MIT"
 digits_data_path = 'datasets/data/MNist_ttt4275/data_all.mat'
 
 def digits():
-    print("\n\n------------------------ DIGITS ------------------------")
-    print("Using full traning set as templates")
+    print("\n\n-------------------------- DIGITS --------------------------")
+    print(".: Using full traning set as templates :.")
     nn_classifier = NN(MNISTDataSet(digits_data_path))
     #nn_classifier.test(num_chunks=50)
     #nn_classifier.print_performance()
@@ -26,3 +26,4 @@ def digits():
     nn_classifier.plot_correctly_classified(selection_size)
 
     # TODO: KNN classifier
+    # Notat: statistics.mode() for å finne mest vanlige element i liste

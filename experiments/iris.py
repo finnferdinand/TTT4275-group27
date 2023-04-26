@@ -10,8 +10,8 @@ __license__ = "MIT"
 iris_data_path = 'datasets/data/Iris_TTT4275/iris.data'
 
 def iris():
-    print("------------------------- IRIS -------------------------")  
-    print("Using first 30 as training set and last 20 as testing set")    
+    print("---------------------------- IRIS ----------------------------")  
+    print(".: Using first 30 as training set and last 20 as testing set :.")    
     linear_classifier = Linear(
         IrisDataSet(data_path = iris_data_path, train_test_ratio = 3 / 5), 
         Linear.Configuration(step_size = 0.007, max_iterations = 1500, threshold = 0.3),
@@ -24,22 +24,22 @@ def iris():
     # Inspecting dataset
     linear_classifier.plot_histograms()
 
-    print("\nUsing last 30 as training set and first 20 as testing set")    
+    print("\n.: Using last 30 as training set and first 20 as testing set :.")    
     linear_classifier.train(training_first = False)
     linear_classifier.test()
     linear_classifier.print_performance()
 
-    print("\nRemoved most overlapping feature")    
+    print("\n.: Removed most overlapping feature :.")    
     linear_classifier.train(training_first = True, selected_features=[0,2,3])
     linear_classifier.test()
     linear_classifier.print_performance()
 
-    print("\nRemoved 2 most overlapping feature")    
+    print("\n.: Removed 2 most overlapping features :.")    
     linear_classifier.train(training_first = True, selected_features=[2,3])
     linear_classifier.test()
     linear_classifier.print_performance()
 
-    print("\nRemoved 3 most overlapping feature")    
+    print("\n.: Removed 3 most overlapping features :.")    
     linear_classifier.train(training_first = True, selected_features=[3])
     linear_classifier.test()
     linear_classifier.print_performance()

@@ -10,7 +10,7 @@ __copyright__ = "Copyright 2023"
 __license__ = "MIT"
 
 if __name__ == "__main__":
-    #iris()
+    # iris()
     digits()
 
     plt.show()

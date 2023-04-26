@@ -3,6 +3,10 @@
 Classifier based on the nearest neighbor decision rule.
 It uses the methods described in Johnsen, Magne H.; Classification 
 (2017) pp. 10 & 18-20.
+
+The clustering algorithm used is KMeans from scikit-learn. This
+algorithm was chosen due to its excellent runtime performance:
+https://hdbscan.readthedocs.io/en/latest/performance_and_scalability.html#comparison-of-high-performance-implementations
 """
 
 import numpy as np
