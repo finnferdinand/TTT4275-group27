@@ -12,6 +12,7 @@ https://hdbscan.readthedocs.io/en/latest/performance_and_scalability.html#compar
 import numpy as np
 import scipy.spatial
 import concurrent.futures
+import time
 
 from sklearn.cluster import KMeans
 from matplotlib import pyplot as plt
@@ -34,8 +35,11 @@ class NN(Classifier):
             raise Exception("num_chunks is not evenly divisible by the number of training samples")
         if self.dataset.testlab.shape[0] % num_chunks != 0 and num_clusters is None:
             raise Exception("num_chunks is not evenly divisible by the number of test samples")
-        print("Testing " + str(k) + "NN classifier. This may take a few seconds...")
+        print("Testing " + str(k) + "NN classifier using " + str(num_chunks) + " chunks" 
+              + (" and " + str(num_clusters) + " clusters per class" if num_clusters is not None else ("")) 
+              + ". This may take a few seconds...\n")
 
+        start = time.time()
         extended_k = (np.ones(num_chunks)*k).astype(int)
 
         if num_clusters is None:
@@ -52,8 +56,6 @@ class NN(Classifier):
                     extended_k
                 )))
         else:
-            if num_clusters % num_chunks != 0:
-                raise Exception("num_chunks is not evenly divisible by the number of clusters")
             self._clustering(num_clusters)
 
             extended_C = np.kron(np.ones((num_chunks, 1)), self.C).astype(int)
@@ -69,6 +71,8 @@ class NN(Classifier):
                 )))
 
         self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
+        end = time.time()
+        print("Time elapsed: " + str(end - start) + " seconds\n")
     
     def plot_misclassified(self, selection_size):
         misclassified_filter = self.classified_labels != self.dataset.testlab
@@ -91,15 +95,12 @@ class NN(Classifier):
         self._plot_selection(image_data, correctly_classified_labels, correct_labels)
 
     def _clustering(self, num_clusters):
-        #self.idx= np.empty((1, 0))
         self.clabel = np.empty((1, 0), dtype=int)
         self.C = np.empty((0, self.dataset.vec_size), dtype=int)
         for c in range(self.dataset.num_classes):
-            print("Clustering class: " + str(c) + "...")
             class_filter = c == self.dataset.trainlab
             data_from_class = self.dataset.trainv[class_filter, :]
             kmeans = KMeans(n_clusters=num_clusters, n_init=1).fit(data_from_class)
-            # self.idx = np.append(self.idx, kmeans.labels_)
             self.clabel = np.append(self.clabel, c * np.ones(num_clusters).astype(int))
             self.C = np.vstack((self.C, kmeans.cluster_centers_.astype(int)))
 
@@ -108,19 +109,23 @@ class NN(Classifier):
         Classifies a chunk of the test data according to the nearest neighbor rule
         on a subset of the training data.
         """
-        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix (distance from train_i to test_j)
-        nearest_neighbor_index_array = np.argpartition(dist, k, axis=0)[:k]
-        #nearest_neighbor_index_array = np.asarray(np.argmin(dist, axis=0))                # find the indexes of the nearest neighbors (for each test_j, which train_i has shortest distance)
-        knn_matrix = np.empty((0,len(test_subset_data)), dtype=int)
-        nn_result = np.empty((1,0))
+        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data)          # calculate the distance matrix (distance from train_i to test_j)
+        nearest_neighbor_index_array = np.argpartition(dist, range(k), axis=0)[:k]         # indexes of k-closest neighbours (for each test_j, which train_i has shortest distance)
+        knn_matrix = np.empty((0,len(test_subset_data)), dtype=int)                        # i'th row is the label of the i'th closest neighbour, j'th column has labels of kNN for j'th test
+        nn_result = np.empty((1,0), dtype=int)
         for i in range(k):
             knn_matrix = np.vstack((knn_matrix, np.take(train_subset_labels, nearest_neighbor_index_array[i])))
-        for col in knn_matrix.transpose():
-            label_freq = np.bincount(col)
-            nn_result = np.append(nn_result, np.argmax(label_freq))
-        
-        # print(nn_result.shape)
-        #return np.take(train_subset_labels, nearest_neighbor_index_array[0])         # classified label is the label of the nearest neighbour 
+        for col in knn_matrix.transpose():                                                 # Check each column to find kNNs for a test sample
+            label_freq = np.bincount(col)                                                  # Create array containing frequency of each label, where index of array equal to the label
+            most_freq_labels = np.argwhere(label_freq == np.amax(label_freq)).flatten()    # Create array which contains indices/labels that appears most frequent
+            if len(most_freq_labels) > 1:                                                  # If several labels are most frequent, test which one is closest and choose it as labe lof choice
+                for label in col:
+                    if label in most_freq_labels:
+                        nn_result = np.append(nn_result, label)
+                        break                                                              # TODO: This currently uses the one nearest neighbour as deciding factor, maybe testing sum of distances for all neighbours instead?
+            else:
+                nn_result = np.append(nn_result, most_freq_labels)
+
         return nn_result.astype(int)
 
     def _plot_selection(self, data, classified_labels, correct_labels):

@@ -21,7 +21,7 @@ class Classifier(object):
     def print_performance(self):
         print("Confusion Matrix:")
         print(self.confusion_matrix)
-        print(f"Detection rate: {round(self.get_detection_rate(self.confusion_matrix)*100, 2)}%")
+        print(f"Detection rate: {round(self.get_detection_rate(self.confusion_matrix)*100, 2)}%\n")
 
     def get_detection_rate(self, confusion_matrix):
         return np.trace(confusion_matrix) / np.sum(confusion_matrix)
