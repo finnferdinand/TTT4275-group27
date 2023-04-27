@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Finn Ferdinand Sandvand and Christian Le"
+__copyright__ = "Copyright 2023"
+__license__ = "MIT"
+
 class Logger(object):
     def __init__(self):
         self.filename = "output.txt"
