@@ -32,3 +32,10 @@ Run the main program with
 ```bash
 $ python main.py
 ```
+
+## Output
+
+Running the program may take a while, and the computation time will depend on 
+your specific computer's specs and operating system.
+The output of the program is collected in a file `output.txt` containing
+all significant results.
