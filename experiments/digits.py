@@ -13,6 +13,7 @@ def digits():
     print("\n\n-------------------------- DIGITS --------------------------")
     print(".: Using full traning set as templates :.")
     nn_classifier = kNN(MNISTDataSet(digits_data_path))
+    nn_classifier.log_write("\n\n-------------------------- DIGITS --------------------------\n")
 
     # Task 1a (Test significance of chunks)
     # Task 1b&c (Plot classified and misclassified images)

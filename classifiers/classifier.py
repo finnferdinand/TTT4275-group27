@@ -14,12 +14,12 @@ __license__ = "MIT"
 
 class Classifier(object):
     figure_counter = 0
+    logger = Logger()
 
     def __init__(self):
         np.set_printoptions(suppress = True)
         self.confusion_matrix = None
         self.classified_labels = None
-        self.logger = Logger()
 
     def log_performance(self, title):
         print("Logging performance...")

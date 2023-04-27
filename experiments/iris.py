@@ -16,6 +16,7 @@ def iris():
         IrisDataSet(data_path = iris_data_path, train_test_ratio = 3 / 5), 
         Linear.Configuration(step_size = 0.007, max_iterations = 1500, threshold = 0.3),
     )
+    linear_classifier.log_write("---------------------------- IRIS ----------------------------\n")  
     linear_classifier.train(training_first = True)
     linear_classifier.test()
     linear_classifier.log_performance(".: Using first 30 as training set and last 20 as testing set :.")
