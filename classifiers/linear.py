@@ -105,7 +105,7 @@ class Linear(Classifier):
     def plot_MSE(self):
         super().new_figure()
         plt.plot(self.mean_square_error)
-        plt.title("MSE")
+        plt.title("Square Error")
         self.save_figure()
 
     # helper functions for training
