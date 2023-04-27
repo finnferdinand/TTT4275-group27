@@ -13,16 +13,39 @@ def digits():
     print("\n\n-------------------------- DIGITS --------------------------")
     print(".: Using full traning set as templates :.")
     nn_classifier = NN(MNISTDataSet(digits_data_path))
-    nn_classifier.test(num_chunks=50)
+
+    # Task 1a (Test significance of chunks)
+    # Task 1b&c (Plot classified and misclassified images)
+    nn_classifier.test(num_chunks=1000)
+    nn_classifier.print_performance() 
+    nn_classifier.plot_misclassified()
+    nn_classifier.plot_correctly_classified()
+
+    nn_classifier.test(num_chunks=10)
+    nn_classifier.print_performance() 
+    nn_classifier.plot_misclassified()
+    nn_classifier.plot_correctly_classified()
+
+    # Task 2a&b (Create 64 clusters per class and check significance of these templates)
+    nn_classifier.test(num_chunks=1000, num_clusters=64, k=1)
     nn_classifier.print_performance()
-    # plot a selection of misclassified and correctly classified test samples
-    selection_size = 10
-    #nn_classifier.plot_misclassified(selection_size)
-    #nn_classifier.plot_correctly_classified(selection_size)
+    nn_classifier.plot_misclassified()
+    nn_classifier.plot_correctly_classified()
+
+    # Task 2c (Test significance of 'k'NN neighours)
+    nn_classifier.test(num_chunks=10, num_clusters=64, k=3)
+    nn_classifier.print_performance()
+    nn_classifier.plot_misclassified()
+    nn_classifier.plot_correctly_classified()
 
     nn_classifier.test(num_chunks=10, num_clusters=64, k=5)
     nn_classifier.print_performance()
-    # nn_classifier.plot_misclassified(selection_size)
-    # nn_classifier.plot_correctly_classified(selection_size)
+    nn_classifier.plot_misclassified()
+    nn_classifier.plot_correctly_classified()
+
+    nn_classifier.test(num_chunks=10, num_clusters=64, k=7)
+    nn_classifier.print_performance()
+    nn_classifier.plot_misclassified()
+    nn_classifier.plot_correctly_classified()
 
     # Notat: statistics.mode() for å finne mest vanlige element i liste

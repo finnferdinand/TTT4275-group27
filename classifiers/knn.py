@@ -30,14 +30,18 @@ class NN(Classifier):
         self.dataset          = dataset
         self.confusion_matrix = np.zeros([self.dataset.row_size, self.dataset.col_size])
 
-    def test(self, num_chunks, num_clusters = None, k=1):
+    def test(self, num_chunks=10, num_clusters = None, k=1):
         if self.dataset.trainlab.shape[0] % num_chunks != 0 and num_clusters is None:
             raise Exception("num_chunks is not evenly divisible by the number of training samples")
         if self.dataset.testlab.shape[0] % num_chunks != 0 and num_clusters is None:
             raise Exception("num_chunks is not evenly divisible by the number of test samples")
         print("Testing " + str(k) + "NN classifier using " + str(num_chunks) + " chunks" 
-              + (" and " + str(num_clusters) + " clusters per class" if num_clusters is not None else ("")) 
+              + (" and " + str(num_clusters) + "-means clustering per class" if num_clusters is not None else ("")) 
               + ". This may take a few seconds...\n")
+        
+        self.num_chunks = num_chunks
+        self.num_clusters = num_clusters
+        self.k = k
 
         start = time.time()
         extended_k = (np.ones(num_chunks)*k).astype(int)
@@ -82,16 +86,19 @@ class NN(Classifier):
         image_data = image_data[:selection_size, :]                         # selection_size first misclassified data
         correct_labels = self.dataset.testlab.flatten()[misclassified_filter]
         correct_labels = correct_labels[:selection_size]
+        self.is_correctly_classified = False
         self._plot_selection(image_data, misclassified_labels, correct_labels)
 
-    def plot_correctly_classified(self, selection_size):
+    def plot_correctly_classified(self):
+        num_extracted_data = 10
         correctly_classified_filter = self.classified_labels == self.dataset.testlab
         correctly_classified_labels = self.classified_labels[correctly_classified_filter] # all correctly classified labels
         correctly_classified_labels = correctly_classified_labels[:selection_size]        # selection_size first correctly classified labels
         image_data = self.dataset.testv[correctly_classified_filter, :]                   # all correctly classified data
-        image_data = image_data[:selection_size, :]                                       # selection_size first correctly classified data
+        image_data = image_data[:num_extracted_data, :]                                       # selection_size first correctly classified data
         correct_labels = self.dataset.testlab[correctly_classified_filter]
-        correct_labels = correct_labels[:selection_size]
+        correct_labels = correct_labels[:num_extracted_data]
+        self.is_correctly_classified = True
         self._plot_selection(image_data, correctly_classified_labels, correct_labels)
 
     def _clustering(self, num_clusters):
@@ -136,3 +143,6 @@ class NN(Classifier):
             square_test_image = np.reshape(data[index], [self.dataset.row_size, self.dataset.col_size])
             plt.imshow(square_test_image, interpolation='nearest')
             plt.title(f"Classified: {classified_labels[index]}\nActual: {correct_labels[index]}")
+        plt.suptitle(("Correctly classified labels" if self.is_correctly_classified else "Misclassified labels") 
+                     + f" using {self.num_chunks} chunks using {self.k}NN"
+                     + (f" with {self.num_clusters}-means clustering per class.") if self.num_clusters is not None else ".")
