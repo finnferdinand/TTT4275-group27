@@ -78,8 +78,9 @@ class Linear(Classifier):
         G = self._sigmoid(Z)
         self.test_confusion_matrix = scipy.stats.contingency.crosstab(np.argmax(G, axis=0), np.argmax(T, axis=0)).count
 
-    def print_performance(self):
+    def log_performance(self, title):
         print("\nLogging performance...")
+        self.logger.write("\n" + title + "\n")
         self.log_write("Training Set CM" + self.dataset.num_classes * "   " + "  " + "Test Set CM")
         for c in range(self.dataset.num_classes):
             self.log_write(f"{self.train_confusion_matrix[c,:]}" + "   " * self.dataset.num_classes +
