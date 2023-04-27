@@ -3,6 +3,7 @@
 An abstract class for a general classifier.
 """
 
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -20,6 +21,7 @@ class Classifier(object):
         np.set_printoptions(suppress = True)
         self.confusion_matrix = None
         self.classified_labels = None
+        self.figure_path = "figures"
 
     def log_performance(self, title):
         print("Logging performance...")
@@ -34,6 +36,11 @@ class Classifier(object):
     def new_figure(self):
         Classifier.figure_counter += 1
         plt.figure(Classifier.figure_counter)
+
+    def save_figure(self):
+        if not os.path.exists(self.figure_path):
+            os.makedirs(self.figure_path)
+        plt.savefig(f"{self.figure_path}/figure{Classifier.figure_counter}.pdf", format="pdf")
 
     def log_write(self, string):
         self.logger.write(string)

@@ -44,8 +44,10 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Run program
       run: python main.py
-    - name: Upload report
+    - name: Upload output
       uses: actions/upload-artifact@v3
       with:
-        name: output-report
-        path: output.txt
+        name: output-report-and-figures
+        path: |
+          figures/
+          output.txt

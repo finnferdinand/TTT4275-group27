@@ -20,4 +20,3 @@ class MNISTDataSet(object):
         self.col_size  = data_all['col_size'][0,0]     # number of columns in a single image
         self.vec_size  = data_all['vec_size'][0,0]     # number of elements in an image vector
         self.num_classes = 10
-        

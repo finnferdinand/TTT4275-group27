@@ -90,6 +90,7 @@ class kNN(Classifier):
         self._plot_selection(image_data, misclassified_labels, correct_labels)
         plt.suptitle(f"Misclassified samples using {self.num_chunks} chunks using {self.k}NN"
                      + (f" with {self.num_clusters}-means clustering per class." if self.num_clusters is not None else "."))
+        self.save_figure()
 
     def plot_correctly_classified(self):
         num_extracted_data = 10
@@ -103,6 +104,7 @@ class kNN(Classifier):
         self._plot_selection(image_data, correctly_classified_labels, correct_labels)
         plt.suptitle(f"Correctly classified samples using {self.num_chunks} chunks using {self.k}NN"
                      + (f" with {self.num_clusters}-means clustering per class." if self.num_clusters is not None else "."))
+        self.save_figure()
 
     def _clustering(self, num_clusters):
         self.clabel = np.empty((1, 0), dtype=int)

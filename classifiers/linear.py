@@ -100,11 +100,13 @@ class Linear(Classifier):
                 plt.hist(self.dataset.data[c*self.dataset.per_class:(c+1)*self.dataset.per_class, feature], bins=20, range=[0,8])
                 if c == 0: plt.title("Feature: " + str(feature))
                 if feature == 0: plt.ylabel("Class: " + str(c))
+        self.save_figure()
 
     def plot_MSE(self):
         super().new_figure()
         plt.plot(self.mean_square_error)
         plt.title("MSE")
+        self.save_figure()
 
     # helper functions for training
     def _MSEgradient(self, G, T, X):
