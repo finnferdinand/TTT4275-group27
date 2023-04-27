@@ -93,7 +93,7 @@ class NN(Classifier):
         num_extracted_data = 10
         correctly_classified_filter = self.classified_labels == self.dataset.testlab
         correctly_classified_labels = self.classified_labels[correctly_classified_filter] # all correctly classified labels
-        correctly_classified_labels = correctly_classified_labels[:selection_size]        # selection_size first correctly classified labels
+        correctly_classified_labels = correctly_classified_labels[:num_extracted_data]        # selection_size first correctly classified labels
         image_data = self.dataset.testv[correctly_classified_filter, :]                   # all correctly classified data
         image_data = image_data[:num_extracted_data, :]                                       # selection_size first correctly classified data
         correct_labels = self.dataset.testlab[correctly_classified_filter]
