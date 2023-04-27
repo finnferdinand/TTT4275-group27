@@ -46,6 +46,6 @@ jobs:
       run: python main.py
     - name: Upload report
       uses: actions/upload-artifact@v3
-        with:
-          name: output-report
-          path: output.txt
+      with:
+        name: output-report
+        path: output.txt
