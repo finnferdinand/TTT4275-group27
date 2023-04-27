@@ -11,6 +11,7 @@ https://hdbscan.readthedocs.io/en/latest/performance_and_scalability.html#compar
 
 import numpy as np
 import scipy.spatial
+import scipy.stats
 import concurrent.futures
 import time
 
@@ -108,24 +109,10 @@ class NN(Classifier):
         Classifies a chunk of the test data according to the nearest neighbor rule
         on a subset of the training data.
         """
-        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data)          # calculate the distance matrix (distance from train_i to test_j)
-        nearest_neighbor_index_array = np.argpartition(dist, range(k), axis=0)[:k]         # indexes of k-closest neighbours (for each test_j, which train_i has shortest distance)
-        knn_matrix = np.empty((0,len(test_subset_data)), dtype=int)                        # i'th row is the label of the i'th closest neighbour, j'th column has labels of kNN for j'th test
-        nn_result = np.empty((1,0), dtype=int)
-        for i in range(k):
-            knn_matrix = np.vstack((knn_matrix, np.take(train_subset_labels, nearest_neighbor_index_array[i])))
-        for col in knn_matrix.transpose():                                                 # Check each column to find kNNs for a test sample
-            label_freq = np.bincount(col)                                                  # Create array containing frequency of each label, where index of array equal to the label
-            most_freq_labels = np.argwhere(label_freq == np.amax(label_freq)).flatten()    # Create array which contains indices/labels that appears most frequent
-            if len(most_freq_labels) > 1:                                                  # If several labels are most frequent, test which one is closest and choose it as labe lof choice
-                for label in col:
-                    if label in most_freq_labels:
-                        nn_result = np.append(nn_result, label)
-                        break                                                              # TODO: This currently uses the one nearest neighbour as deciding factor, maybe testing sum of distances for all neighbours instead?
-            else:
-                nn_result = np.append(nn_result, most_freq_labels)
-
-        return nn_result.astype(int)
+        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix
+        k_nearest_indexes = np.argpartition(dist, k, axis=0)[:k]
+        k_nearest_labels = train_subset_labels[k_nearest_indexes]
+        return scipy.stats.mode(k_nearest_labels, keepdims=False).mode
 
     def _plot_selection(self, data, classified_labels, correct_labels):
         selection_size = len(data) # must be even
