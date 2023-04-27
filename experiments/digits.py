@@ -21,29 +21,25 @@ def digits():
     nn_classifier.plot_misclassified()
     nn_classifier.plot_correctly_classified()
 
-    nn_classifier.test(num_chunks=10)
-    nn_classifier.log_performance("num_chunks = 10") 
+    nn_classifier.test(num_chunks=100)
+    nn_classifier.log_performance("num_chunks = 100") 
     nn_classifier.plot_misclassified()
     nn_classifier.plot_correctly_classified()
 
     # Task 2a&b (Create 64 clusters per class and check significance of these templates)
+    # Also test significance of chunks
     nn_classifier.test(num_chunks=1000, num_clusters=64, k=1)
     nn_classifier.log_performance("num_chunks = 1000, num_clusters = 64, k = 1")
-    nn_classifier.plot_misclassified()
-    nn_classifier.plot_correctly_classified()
+
+    nn_classifier.test(num_chunks=100, num_clusters=64, k=1)
+    nn_classifier.log_performance("num_chunks = 100, num_clusters = 64, k = 1")
 
     # Task 2c (Test significance of 'k'NN neighours)
-    nn_classifier.test(num_chunks=10, num_clusters=64, k=3)
-    nn_classifier.log_performance("num_chunks = 10, num_clusters = 64, k = 3")
-    nn_classifier.plot_misclassified()
-    nn_classifier.plot_correctly_classified()
+    nn_classifier.test(num_chunks=100, num_clusters=64, k=3)
+    nn_classifier.log_performance("num_chunks = 100, num_clusters = 64, k = 3")
 
-    nn_classifier.test(num_chunks=10, num_clusters=64, k=5)
-    nn_classifier.log_performance("num_chunks = 10, num_clusters = 64, k = 5")
-    nn_classifier.plot_misclassified()
-    nn_classifier.plot_correctly_classified()
+    nn_classifier.test(num_chunks=100, num_clusters=64, k=5)
+    nn_classifier.log_performance("num_chunks = 100, num_clusters = 64, k = 5")
 
-    nn_classifier.test(num_chunks=10, num_clusters=64, k=7)
-    nn_classifier.log_performance("num_chunks = 10, num_clusters = 64, k = 7")
-    nn_classifier.plot_misclassified()
-    nn_classifier.plot_correctly_classified()
+    nn_classifier.test(num_chunks=100, num_clusters=64, k=7)
+    nn_classifier.log_performance("num_chunks = 100, num_clusters = 64, k = 7")
