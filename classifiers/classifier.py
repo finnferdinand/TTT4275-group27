@@ -26,7 +26,7 @@ class Classifier(object):
         self.logger.write("\n" + title + "\n")
         self.logger.write("Confusion Matrix:\n")
         self.logger.write(f"{self.confusion_matrix}\n")
-        self.logger.write(f"Detection rate: {round(self.get_detection_rate(self.confusion_matrix)*100, 2)}%\n")
+        self.logger.write(f"Detection rate: {round(self.get_detection_rate(self.confusion_matrix)*100, 2)}%\n\n")
 
     def get_detection_rate(self, confusion_matrix):
         return np.trace(confusion_matrix) / np.sum(confusion_matrix)

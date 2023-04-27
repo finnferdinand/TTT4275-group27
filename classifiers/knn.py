@@ -75,7 +75,7 @@ class kNN(Classifier):
                 )))
         self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
         end = time.time()
-        print(f"Testing complete after: {round(end - start, 2)} seconds\n")
+        self.log_write(f"Testing complete after: {round(end - start, 2)} seconds")
     
     def plot_misclassified(self):
         num_extracted_data = 10
@@ -88,7 +88,7 @@ class kNN(Classifier):
         correct_labels = correct_labels[:num_extracted_data]
         self._plot_selection(image_data, misclassified_labels, correct_labels)
         plt.suptitle(f"Misclassified samples using {self.num_chunks} chunks using {self.k}NN"
-                     + (f" with {self.num_clusters}-means clustering per class.") if self.num_clusters is not None else ".")
+                     + (f" with {self.num_clusters}-means clustering per class." if self.num_clusters is not None else "."))
 
     def plot_correctly_classified(self):
         num_extracted_data = 10
@@ -101,7 +101,7 @@ class kNN(Classifier):
         correct_labels = correct_labels[:num_extracted_data]
         self._plot_selection(image_data, correctly_classified_labels, correct_labels)
         plt.suptitle(f"Correctly classified samples using {self.num_chunks} chunks using {self.k}NN"
-                     + (f" with {self.num_clusters}-means clustering per class.") if self.num_clusters is not None else ".")
+                     + (f" with {self.num_clusters}-means clustering per class." if self.num_clusters is not None else "."))
 
     def _clustering(self, num_clusters):
         self.clabel = np.empty((1, 0), dtype=int)
