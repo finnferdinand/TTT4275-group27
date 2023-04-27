@@ -67,3 +67,10 @@ Running the program may take a while, and the computation time will depend on
 your specific computer's specs and operating system.
 The output of the program is collected in a file `output.txt` containing
 all significant results.
+All generated figures are saved in a folder `figures/`.
+
+As running the program uses significant computing time, the program is run on
+GitHub actions and the outputs are uploaded as artifacts. To find the results
+from the most recent run, navigate to ["Actions"](https://github.com/finnferdinand/TTT4275-group27/actions),
+select the most recent run and download the zipped file from "Artifacts".
+This contains a report of results and all generated figures.
