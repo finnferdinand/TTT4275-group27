@@ -18,7 +18,7 @@ def iris():
     )
     linear_classifier.train(training_first = True)
     linear_classifier.test()
-    linear_classifier.print_performance()
+    linear_classifier.log_performance(".: Using first 30 as training set and last 20 as testing set :.")
     linear_classifier.plot_MSE()
 
     # Inspecting dataset
@@ -27,19 +27,19 @@ def iris():
     print("\n.: Using last 30 as training set and first 20 as testing set :.")    
     linear_classifier.train(training_first = False)
     linear_classifier.test()
-    linear_classifier.print_performance()
+    linear_classifier.log_performance(".: Using last 30 as training set and first 20 as testing set :.")
 
     print("\n.: Removed most overlapping feature :.")    
     linear_classifier.train(training_first = True, selected_features=[0,2,3])
     linear_classifier.test()
-    linear_classifier.print_performance()
+    linear_classifier.log_performance(".: Removed most overlapping feature :.")
 
     print("\n.: Removed 2 most overlapping features :.")    
     linear_classifier.train(training_first = True, selected_features=[2,3])
     linear_classifier.test()
-    linear_classifier.print_performance()
+    linear_classifier.log_performance(".: Removed 2 most overlapping features :.")
 
     print("\n.: Removed 3 most overlapping features :.")    
     linear_classifier.train(training_first = True, selected_features=[3])
     linear_classifier.test()
-    linear_classifier.print_performance()
+    linear_classifier.log_performance(".: Removed 3 most overlapping features :.")

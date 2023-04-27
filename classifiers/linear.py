@@ -79,12 +79,12 @@ class Linear(Classifier):
         self.test_confusion_matrix = scipy.stats.contingency.crosstab(np.argmax(G, axis=0), np.argmax(T, axis=0)).count
 
     def print_performance(self):
-        print("\n~~ PERFORMANCE ~~")
-        print("Training Set CM" + self.dataset.num_classes * "   " + "  " + "Test Set CM")
+        print("\nLogging performance...")
+        self.log_write("Training Set CM" + self.dataset.num_classes * "   " + "  " + "Test Set CM")
         for c in range(self.dataset.num_classes):
-            print(f"{self.train_confusion_matrix[c,:]}" + "   " * self.dataset.num_classes +
+            self.log_write(f"{self.train_confusion_matrix[c,:]}" + "   " * self.dataset.num_classes +
                   "       " + f"{self.test_confusion_matrix[c,:]}")
-        print(f"Det. rate: {round(self.get_detection_rate(self.train_confusion_matrix)*100, 2)}%" +
+        self.log_write(f"Det. rate: {round(self.get_detection_rate(self.train_confusion_matrix)*100, 2)}%" +
               f"   " * self.dataset.num_classes +
               f"Det. rate: {round(self.get_detection_rate(self.test_confusion_matrix)*100, 2)}%")
     

@@ -69,10 +69,9 @@ class NN(Classifier):
                     np.split(extended_clabel, num_chunks),
                     extended_k
                 )))
-
         self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
         end = time.time()
-        print("Time elapsed: " + str(end - start) + " seconds\n")
+        print(f"Testing complete after: {round(end - start, 2)} seconds\n")
     
     def plot_misclassified(self, selection_size):
         misclassified_filter = self.classified_labels != self.dataset.testlab
