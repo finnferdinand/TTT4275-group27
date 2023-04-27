@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from classifiers.knn import NN
+from classifiers.knn import kNN
 from datasets.mnistdataset import MNISTDataSet
 
 __author__ = "Finn Ferdinand Sandvand and Christian Le"
@@ -12,7 +12,7 @@ digits_data_path = 'datasets/data/MNist_ttt4275/data_all.mat'
 def digits():
     print("\n\n-------------------------- DIGITS --------------------------")
     print(".: Using full traning set as templates :.")
-    nn_classifier = NN(MNISTDataSet(digits_data_path))
+    nn_classifier = kNN(MNISTDataSet(digits_data_path))
 
     # Task 1a (Test significance of chunks)
     # Task 1b&c (Plot classified and misclassified images)

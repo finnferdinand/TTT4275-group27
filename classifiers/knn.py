@@ -24,7 +24,7 @@ __copyright__ = "Copyright 2023"
 __credits__ = ["Magne H. Johnsen"]
 __license__ = "MIT"
 
-class NN(Classifier):
+class kNN(Classifier):
     def __init__(self, dataset):
         super().__init__()
         self.dataset          = dataset
