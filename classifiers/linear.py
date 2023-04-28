@@ -91,7 +91,7 @@ class Linear(Classifier):
     
     def plot_histograms(self):
         print("Producing histograms...")
-        super().new_figure()
+        self.new_figure()
         counter = 0
         for c in range(self.dataset.num_classes):
             for feature in range(self.dataset.num_features):
@@ -103,7 +103,7 @@ class Linear(Classifier):
         self.save_figure()
 
     def plot_MSE(self):
-        super().new_figure()
+        self.new_figure()
         plt.plot(self.mean_square_error)
         plt.title("Square Error")
         self.save_figure()

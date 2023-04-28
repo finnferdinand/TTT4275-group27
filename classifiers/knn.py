@@ -14,7 +14,6 @@ import scipy.spatial
 import scipy.stats
 import concurrent.futures
 import time
-
 from sklearn.cluster import KMeans
 from matplotlib import pyplot as plt
 
@@ -80,10 +79,10 @@ class kNN(Classifier):
     def plot_misclassified(self):
         num_extracted_data = 10
         misclassified_filter = self.classified_labels != self.dataset.testlab
-        misclassified_labels = self.classified_labels[misclassified_filter]                     # all misclassified labels
-        misclassified_labels = misclassified_labels[:num_extracted_data]                        # num_extracted_data first misclassified labels
-        image_data = self.dataset.testv[misclassified_filter, :]                                # all misclassified data
-        image_data = image_data[:num_extracted_data, :]                                         # num_extracted_data first misclassified data
+        misclassified_labels = self.classified_labels[misclassified_filter] # all misclassified labels
+        misclassified_labels = misclassified_labels[:num_extracted_data]    # selection_size first misclassified labels
+        image_data = self.dataset.testv[misclassified_filter, :]            # all misclassified data
+        image_data = image_data[:num_extracted_data, :]                     # selection_size first misclassified data
         correct_labels = self.dataset.testlab.flatten()[misclassified_filter]
         correct_labels = correct_labels[:num_extracted_data]
         self._plot_selection(image_data, misclassified_labels, correct_labels)
@@ -94,10 +93,10 @@ class kNN(Classifier):
     def plot_correctly_classified(self):
         num_extracted_data = 10
         correctly_classified_filter = self.classified_labels == self.dataset.testlab
-        correctly_classified_labels = self.classified_labels[correctly_classified_filter]       # all correctly classified labels
-        correctly_classified_labels = correctly_classified_labels[:num_extracted_data]          # num_extracted_data first correctly classified labels
-        image_data = self.dataset.testv[correctly_classified_filter, :]                         # all correctly classified data
-        image_data = image_data[:num_extracted_data, :]                                         # num_extracted_data first correctly classified data
+        correctly_classified_labels = self.classified_labels[correctly_classified_filter] # all correctly classified labels
+        correctly_classified_labels = correctly_classified_labels[:num_extracted_data]    # num_extracted_data first correctly classified labels
+        image_data = self.dataset.testv[correctly_classified_filter, :]                   # all correctly classified data
+        image_data = image_data[:num_extracted_data, :]                                   # num_extracted_data first correctly classified data
         correct_labels = self.dataset.testlab[correctly_classified_filter]
         correct_labels = correct_labels[:num_extracted_data]
         self._plot_selection(image_data, correctly_classified_labels, correct_labels)
@@ -126,11 +125,10 @@ class kNN(Classifier):
         Classifies a chunk of the test data according to the 
         nearest neighbor rule on a subset of the training data.
         """
-        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data)               # calculate the distance matrix
-        k_nearest_indexes = np.argpartition(dist, k, axis=0)[:k]
-        k_nearest_labels = train_subset_labels[k_nearest_indexes]
-        
-        return scipy.stats.mode(k_nearest_labels, keepdims=False).mode
+        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix
+        k_nearest_indexes = np.argpartition(dist, k, axis=0)[:k]                  # indexes of the nearest neighbors
+        k_nearest_labels = train_subset_labels[k_nearest_indexes]                 # labels of the nearest neighbors
+        return scipy.stats.mode(k_nearest_labels, keepdims=False).mode            # classified label is the most common label (mode)
 
     def _plot_selection(self, data, classified_labels, correct_labels):
         """
@@ -138,7 +136,7 @@ class kNN(Classifier):
         with the correct label.
         """
         selection_size = len(data)
-        super().new_figure()
+        self.new_figure()
         for index in range(selection_size):
             plt.subplot(2, selection_size//2, index+1)
             square_test_image = np.reshape(data[index], [self.dataset.row_size, self.dataset.col_size])
