@@ -10,6 +10,7 @@ __license__ = "MIT"
 iris_data_path = 'datasets/data/Iris_TTT4275/iris.data'
 
 def iris():
+    # Task 1c) (First 30 as training, last 20 as testing)
     print("---------------------------- IRIS ----------------------------")  
     print(".: Using first 30 as training set and last 20 as testing set :.")    
     linear_classifier = Linear(
@@ -25,11 +26,13 @@ def iris():
     # Inspecting dataset
     linear_classifier.plot_histograms()
 
+    # Task 1d) (Last 30 as training, first 20 as testing)
     print("\n.: Using last 30 as training set and first 20 as testing set :.")    
     linear_classifier.train(training_first = False)
     linear_classifier.test()
     linear_classifier.log_performance(".: Using last 30 as training set and first 20 as testing set :.")
 
+    # Task 2) (Remove features, one by one)
     print("\n.: Removed most overlapping feature :.")    
     linear_classifier.train(training_first = True, selected_features=[0,2,3])
     linear_classifier.test()

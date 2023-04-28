@@ -45,33 +45,32 @@ class kNN(Classifier):
         self.k = k
 
         start = time.time()
-        extended_k = (np.ones(num_chunks)*k).astype(int)
+        extended_k = (np.ones(self.num_chunks)*k).astype(int)
 
-        if num_clusters is None:
-        # each chunk of test samples can be classified in parallell as the sets are independent
-        # therefore, threads are used to test in parallell to speed up the process.
+        if self.num_clusters is None:
+        # Threads are used to test in parallell to speed up the process.
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
                 # executor.map(args) returns a list of classified labels for each chunk in order
                 # all classified labels are then collected in a single numpy array by concatenating this list of arrays
                 self.classified_labels = np.concatenate(list(executor.map(
                     self._classify_chunk, 
-                    np.split(self.dataset.trainv, num_chunks), 
-                    np.split(self.dataset.testv, num_chunks),
-                    np.split(self.dataset.trainlab, num_chunks),
+                    np.split(self.dataset.trainv, self.num_chunks), 
+                    np.split(self.dataset.testv, self.num_chunks),
+                    np.split(self.dataset.trainlab, self.num_chunks),
                     extended_k
                 )))
         else:
-            self._clustering(num_clusters)
+            centroids, clabel = self._clustering()
 
-            extended_C = np.kron(np.ones((num_chunks, 1)), self.C).astype(int)
-            extended_clabel = np.kron(np.ones(num_chunks), self.clabel).astype(int)
+            extended_c = np.kron(np.ones((self.num_chunks, 1)), centroids).astype(int)
+            extended_clabel = np.kron(np.ones(self.num_chunks), clabel).astype(int)
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_chunks) as executor:
                 self.classified_labels = np.concatenate(list(executor.map(
                     self._classify_chunk, 
-                    np.split(extended_C, num_chunks),
-                    np.split(self.dataset.testv, num_chunks),
-                    np.split(extended_clabel, num_chunks),
+                    np.split(extended_c, self.num_chunks),
+                    np.split(self.dataset.testv, self.num_chunks),
+                    np.split(extended_clabel, self.num_chunks),
                     extended_k
                 )))
         self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
@@ -81,10 +80,10 @@ class kNN(Classifier):
     def plot_misclassified(self):
         num_extracted_data = 10
         misclassified_filter = self.classified_labels != self.dataset.testlab
-        misclassified_labels = self.classified_labels[misclassified_filter] # all misclassified labels
-        misclassified_labels = misclassified_labels[:num_extracted_data]        # selection_size first misclassified labels
-        image_data = self.dataset.testv[misclassified_filter, :]            # all misclassified data
-        image_data = image_data[:num_extracted_data, :]                         # selection_size first misclassified data
+        misclassified_labels = self.classified_labels[misclassified_filter]                     # all misclassified labels
+        misclassified_labels = misclassified_labels[:num_extracted_data]                        # num_extracted_data first misclassified labels
+        image_data = self.dataset.testv[misclassified_filter, :]                                # all misclassified data
+        image_data = image_data[:num_extracted_data, :]                                         # num_extracted_data first misclassified data
         correct_labels = self.dataset.testlab.flatten()[misclassified_filter]
         correct_labels = correct_labels[:num_extracted_data]
         self._plot_selection(image_data, misclassified_labels, correct_labels)
@@ -95,10 +94,10 @@ class kNN(Classifier):
     def plot_correctly_classified(self):
         num_extracted_data = 10
         correctly_classified_filter = self.classified_labels == self.dataset.testlab
-        correctly_classified_labels = self.classified_labels[correctly_classified_filter] # all correctly classified labels
-        correctly_classified_labels = correctly_classified_labels[:num_extracted_data]        # num_extracted_data first correctly classified labels
-        image_data = self.dataset.testv[correctly_classified_filter, :]                   # all correctly classified data
-        image_data = image_data[:num_extracted_data, :]                                       # num_extracted_data first correctly classified data
+        correctly_classified_labels = self.classified_labels[correctly_classified_filter]       # all correctly classified labels
+        correctly_classified_labels = correctly_classified_labels[:num_extracted_data]          # num_extracted_data first correctly classified labels
+        image_data = self.dataset.testv[correctly_classified_filter, :]                         # all correctly classified data
+        image_data = image_data[:num_extracted_data, :]                                         # num_extracted_data first correctly classified data
         correct_labels = self.dataset.testlab[correctly_classified_filter]
         correct_labels = correct_labels[:num_extracted_data]
         self._plot_selection(image_data, correctly_classified_labels, correct_labels)
@@ -106,28 +105,39 @@ class kNN(Classifier):
                      + (f" with {self.num_clusters}-means clustering per class." if self.num_clusters is not None else "."))
         self.save_figure()
 
-    def _clustering(self, num_clusters):
-        self.clabel = np.empty((1, 0), dtype=int)
-        self.C = np.empty((0, self.dataset.vec_size), dtype=int)
-        for c in range(self.dataset.num_classes):
-            class_filter = c == self.dataset.trainlab
+    def _clustering(self):
+        """
+        Clusters each class to specified number of clusters.
+        Returns the corresponding centroid and it's label.
+        """
+        clabel = np.empty((1, self.dataset.num_classes * self.num_clusters), dtype=int)
+        centroids = np.empty((self.dataset.num_classes * self.num_clusters, self.dataset.vec_size), dtype=int)
+        for digit_class in range(self.dataset.num_classes):
+            class_filter = digit_class == self.dataset.trainlab
             data_from_class = self.dataset.trainv[class_filter, :]
-            kmeans = KMeans(n_clusters=num_clusters, n_init=1).fit(data_from_class)
-            self.clabel = np.append(self.clabel, c * np.ones(num_clusters).astype(int))
-            self.C = np.vstack((self.C, kmeans.cluster_centers_.astype(int)))
+            kmeans = KMeans(n_clusters=self.num_clusters, n_init=1).fit(data_from_class)
+            clabel = np.append(clabel, digit_class * np.ones(self.num_clusters).astype(int))
+            centroids = np.vstack((centroids, kmeans.cluster_centers_.astype(int)))
+
+        return centroids, clabel
 
     def _classify_chunk(self, train_subset_data, test_subset_data, train_subset_labels, k):
         """
-        Classifies a chunk of the test data according to the nearest neighbor rule
-        on a subset of the training data.
+        Classifies a chunk of the test data according to the 
+        nearest neighbor rule on a subset of the training data.
         """
-        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data) # calculate the distance matrix
+        dist = scipy.spatial.distance_matrix(train_subset_data, test_subset_data)               # calculate the distance matrix
         k_nearest_indexes = np.argpartition(dist, k, axis=0)[:k]
         k_nearest_labels = train_subset_labels[k_nearest_indexes]
+        
         return scipy.stats.mode(k_nearest_labels, keepdims=False).mode
 
     def _plot_selection(self, data, classified_labels, correct_labels):
-        selection_size = len(data) # must be even
+        """
+        Plots the selected data and their classified labels along 
+        with the correct label.
+        """
+        selection_size = len(data)
         super().new_figure()
         for index in range(selection_size):
             plt.subplot(2, selection_size//2, index+1)
