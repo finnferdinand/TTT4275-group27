@@ -110,7 +110,7 @@ class Linear(Classifier):
 
     # helper functions for training
     def _MSEgradient(self, G, T, X):
-        return ((G - T) * G * (1 - G)) @ X.T  # eq (22) in Johnsen, rewritten with g, t, and x matrices 
+        return ((G - T) * G * (1 - G)) @ X.T  # eq (22) in Johnsen, rewritten with G, T, and X matrices 
                                               # for significantly shorter comutation time
 
     def _sigmoid(self, z):
