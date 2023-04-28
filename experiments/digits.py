@@ -25,7 +25,7 @@ def digits():
     nn_classifier.plot_correctly_classified()
 
     # Task 2a (Create 64 clusters per class)
-    print("\nCreating clusters of size: 64")
+    print("\nTraining clusters for each class of size: 64")
     nn_classifier.train(num_clusters = 64)
 
     # Task 2b (Test 1NN for clustered data)

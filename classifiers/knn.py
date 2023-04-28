@@ -32,20 +32,23 @@ class kNN(Classifier):
         self.num_clusters     = None
 
     def test(self, num_chunks = 50, k = 1):
+        """"
+        Runs kNN for a selected 'k' distributed among a selected number of chunks/threads.
+        """
         print("Testing knn classifier...")
         start = time.time()
         self.num_chunks = num_chunks
         self.k = k
         extended_k = (np.ones(self.num_chunks)*k).astype(int)
-        if self.num_clusters is None: # The classifier has not been trained, use full training data
+        if self.num_clusters is None:
+            # The classifier has not been trained, use full training data.           
             if self.dataset.trainlab.shape[0] % num_chunks != 0:
                 raise Exception("num_chunks is not evenly divisible by the number of training samples")
             if self.dataset.testlab.shape[0] % num_chunks != 0:
-                raise Exception("num_chunks is not evenly divisible by the number of test samples")
-    
-            # Threads are used to test in parallell to speed up the process.
+                raise Exception("num_chunks is not evenly divisible by the number of test samples")   
+            # Threads are used to test in parallel to speed up the process.
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
-                # executor.map(args) returns a list of classified labels for each chunk in order
+                # executor.map(args) returns a list of classified labels for each chunk in order,
                 # all classified labels are then collected in a single numpy array by concatenating this list of arrays
                 self.classified_labels = np.concatenate(list(executor.map(
                     self._classify_chunk, 
@@ -54,7 +57,8 @@ class kNN(Classifier):
                     np.split(self.dataset.trainlab, self.num_chunks),
                     extended_k
                 )))
-        else:                         # The classifier has been trained so clusters should be used
+        else:                         
+            # The classifier has been trained so clusters should be used.
             extended_c = np.tile(self.centroids, (self.num_chunks, 1))
             extended_clabel = np.tile(self.clabel, self.num_chunks)
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_chunks) as executor:
@@ -65,16 +69,17 @@ class kNN(Classifier):
                     np.split(extended_clabel, self.num_chunks),
                     extended_k
                 )))
+        # Create confusion matrix by matching correct labels with classified labels.
         self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
         self.log_write(f"Testing complete after: {round(time.time() - start, 2)} seconds")
     
     def plot_misclassified(self):
         num_extracted_data = 10
         misclassified_filter = self.classified_labels != self.dataset.testlab
-        misclassified_labels = self.classified_labels[misclassified_filter] # all misclassified labels
-        misclassified_labels = misclassified_labels[:num_extracted_data]    # selection_size first misclassified labels
-        image_data = self.dataset.testv[misclassified_filter, :]            # all misclassified data
-        image_data = image_data[:num_extracted_data, :]                     # selection_size first misclassified data
+        misclassified_labels = self.classified_labels[misclassified_filter]     # all misclassified labels
+        misclassified_labels = misclassified_labels[:num_extracted_data]        # selection_size first misclassified labels
+        image_data = self.dataset.testv[misclassified_filter, :]                # all misclassified data
+        image_data = image_data[:num_extracted_data, :]                         # selection_size first misclassified data
         correct_labels = self.dataset.testlab.flatten()[misclassified_filter]
         correct_labels = correct_labels[:num_extracted_data]
         self._plot_selection(image_data, misclassified_labels, correct_labels)
@@ -104,8 +109,10 @@ class kNN(Classifier):
         start = time.time()
         print("Training kNN classifier....")
         self.num_clusters = num_clusters
+        # Create a label array corresponding to resulting centroids calculated from KMeans algorithm.
         self.clabel = np.repeat(np.arange(self.dataset.num_classes), self.num_clusters)
         self.centroids = np.empty((self.dataset.num_classes * self.num_clusters, self.dataset.vec_size), dtype=int)
+        # Calculating centroids for each class
         for digit_class in range(self.dataset.num_classes):
             class_filter = digit_class == self.dataset.trainlab
             data_from_class = self.dataset.trainv[class_filter, :]
