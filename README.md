@@ -27,6 +27,7 @@ root/
 |   |-- logger.py        (file logging class)
 |-- main.py              (entrypoint)
 |-- output.txt           (generated output file)
+|-- figures/             (generated figures and plot)
 ```
 
 ## Running the program
