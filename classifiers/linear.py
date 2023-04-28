@@ -85,9 +85,9 @@ class Linear(Classifier):
         for c in range(self.dataset.num_classes):
             self.log_write(f"{self.train_confusion_matrix[c,:]}" + "   " * self.dataset.num_classes +
                   "       " + f"{self.test_confusion_matrix[c,:]}\n")
-        self.log_write(f"Det. rate: {round(self.get_detection_rate(self.train_confusion_matrix)*100, 2)}%" +
+        self.log_write(f"Err. rate: {round(self.get_error_rate(self.train_confusion_matrix)*100, 2)}%" +
               f"   " * self.dataset.num_classes +
-              f"Det. rate: {round(self.get_detection_rate(self.test_confusion_matrix)*100, 2)}%\n")
+              f" Err. rate: {round(self.get_error_rate(self.test_confusion_matrix)*100, 2)}%\n")
     
     def plot_histograms(self):
         print("Producing histograms...")
