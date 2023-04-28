@@ -29,25 +29,21 @@ class kNN(Classifier):
         super().__init__()
         self.dataset          = dataset
         self.confusion_matrix = np.zeros([self.dataset.row_size, self.dataset.col_size])
+        self.num_clusters     = None
 
-    def test(self, num_chunks=10, num_clusters = None, k=1):
-        if self.dataset.trainlab.shape[0] % num_chunks != 0 and num_clusters is None:
-            raise Exception("num_chunks is not evenly divisible by the number of training samples")
-        if self.dataset.testlab.shape[0] % num_chunks != 0 and num_clusters is None:
-            raise Exception("num_chunks is not evenly divisible by the number of test samples")
-        print("Testing " + str(k) + "NN classifier using " + str(num_chunks) + " chunks" 
-              + (" and " + str(num_clusters) + "-means clustering per class" if num_clusters is not None else ("")) 
-              + ". This may take a few seconds...\n")
-        
-        self.num_chunks = num_chunks
-        self.num_clusters = num_clusters
-        self.k = k
-
+    def test(self, num_chunks = 50, k = 1):
+        print("Testing knn classifier...")
         start = time.time()
+        self.num_chunks = num_chunks
+        self.k = k
         extended_k = (np.ones(self.num_chunks)*k).astype(int)
-
-        if self.num_clusters is None:
-        # Threads are used to test in parallell to speed up the process.
+        if self.num_clusters is None: # The classifier has not been trained, use full training data
+            if self.dataset.trainlab.shape[0] % num_chunks != 0:
+                raise Exception("num_chunks is not evenly divisible by the number of training samples")
+            if self.dataset.testlab.shape[0] % num_chunks != 0:
+                raise Exception("num_chunks is not evenly divisible by the number of test samples")
+    
+            # Threads are used to test in parallell to speed up the process.
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_chunks) as executor:
                 # executor.map(args) returns a list of classified labels for each chunk in order
                 # all classified labels are then collected in a single numpy array by concatenating this list of arrays
@@ -58,12 +54,9 @@ class kNN(Classifier):
                     np.split(self.dataset.trainlab, self.num_chunks),
                     extended_k
                 )))
-        else:
-            centroids, clabel = self._clustering()
-
-            extended_c = np.kron(np.ones((self.num_chunks, 1)), centroids).astype(int)
-            extended_clabel = np.kron(np.ones(self.num_chunks), clabel).astype(int)
-
+        else:                         # The classifier has been trained so clusters should be used
+            extended_c = np.tile(self.centroids, (self.num_chunks, 1))
+            extended_clabel = np.tile(self.clabel, self.num_chunks)
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_chunks) as executor:
                 self.classified_labels = np.concatenate(list(executor.map(
                     self._classify_chunk, 
@@ -73,8 +66,7 @@ class kNN(Classifier):
                     extended_k
                 )))
         self.confusion_matrix = scipy.stats.contingency.crosstab(self.dataset.testlab, self.classified_labels).count
-        end = time.time()
-        self.log_write(f"Testing complete after: {round(end - start, 2)} seconds")
+        self.log_write(f"Testing complete after: {round(time.time() - start, 2)} seconds")
     
     def plot_misclassified(self):
         num_extracted_data = 10
@@ -104,21 +96,22 @@ class kNN(Classifier):
                      + (f" with {self.num_clusters}-means clustering per class." if self.num_clusters is not None else "."))
         self.save_figure()
 
-    def _clustering(self):
+    def train(self, num_clusters):
         """
         Clusters each class to specified number of clusters.
         Returns the corresponding centroid and it's label.
         """
-        clabel = np.empty((1, self.dataset.num_classes * self.num_clusters), dtype=int)
-        centroids = np.empty((self.dataset.num_classes * self.num_clusters, self.dataset.vec_size), dtype=int)
+        start = time.time()
+        print("Training kNN classifier....")
+        self.num_clusters = num_clusters
+        self.clabel = np.repeat(np.arange(self.dataset.num_classes), self.num_clusters)
+        self.centroids = np.empty((self.dataset.num_classes * self.num_clusters, self.dataset.vec_size), dtype=int)
         for digit_class in range(self.dataset.num_classes):
             class_filter = digit_class == self.dataset.trainlab
             data_from_class = self.dataset.trainv[class_filter, :]
             kmeans = KMeans(n_clusters=self.num_clusters, n_init=1).fit(data_from_class)
-            clabel = np.append(clabel, digit_class * np.ones(self.num_clusters).astype(int))
-            centroids = np.vstack((centroids, kmeans.cluster_centers_.astype(int)))
-
-        return centroids, clabel
+            self.centroids[digit_class*num_clusters:(digit_class+1)*num_clusters,:] = kmeans.cluster_centers_.astype(int)
+        self.log_write(f"Clustering complete after: {round(time.time() - start, 2)} seconds\n")
 
     def _classify_chunk(self, train_subset_data, test_subset_data, train_subset_labels, k):
         """
