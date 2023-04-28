@@ -15,12 +15,7 @@ def digits():
     nn_classifier = kNN(MNISTDataSet(digits_data_path))
     nn_classifier.log_write("\n\n-------------------------- DIGITS --------------------------\n")  
 
-<<<<<<< HEAD
-    # Task 1a NN classifier using Euclidean distance and chunks
-    # Task 1b&c (Plot classified and misclassified images)
-=======
     # Task 1a (Test 1NN without clustering)
->>>>>>> bb3c08b (update digit comments)
     print("\nUsing kNN classifier with num_chunks = 50")
     nn_classifier.test(num_chunks = 50)
     nn_classifier.log_performance("num_chunks = 50") 
@@ -29,13 +24,8 @@ def digits():
     nn_classifier.plot_misclassified()
     nn_classifier.plot_correctly_classified()
 
-<<<<<<< HEAD
-    # Task 2a&b (Create 64 clusters per class and check significance of these templates)
-    print("\nUsing kNN classifier with num_chunks = 50, num_clusters = 64, k = 1")
-=======
     # Task 2a (Create 64 clusters per class)
     print("\nCreating clusters of size: 64")
->>>>>>> bb3c08b (update digit comments)
     nn_classifier.train(num_clusters = 64)
 
     # Task 2b (Test 1NN for clustered data)
