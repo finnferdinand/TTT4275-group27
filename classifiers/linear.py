@@ -108,6 +108,15 @@ class Linear(Classifier):
         plt.title("Square Error")
         self.save_figure()
 
+    def log_class_feature_correlation(self):
+        self.logger.write("\nFeature-class correlation coefficients:\n")
+        for feature in range(self.dataset.num_features):
+            corrcoef = np.corrcoef(
+                self.dataset.data[:, feature],
+                np.asarray([c for c in range(self.dataset.num_classes) for _ in range(self.dataset.per_class)])
+            )[0,1]
+            self.logger.write(f"Feature {feature}: {round(corrcoef,4)}\n")
+
     # helper functions for training
     def _MSEgradient(self, G, T, X):
         return ((G - T) * G * (1 - G)) @ X.T  # eq (22) in Johnsen, rewritten with G, T, and X matrices 

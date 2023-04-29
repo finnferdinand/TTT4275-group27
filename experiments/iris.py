@@ -26,6 +26,7 @@ def iris():
     # Inspecting dataset
     linear_classifier.plot_histograms()
 
+
     # Task 1d) (Last 30 as training, first 20 as testing)
     print("\n:::: Experiment A.2 ::::")    
     linear_classifier.train(training_first = False)
@@ -34,6 +35,7 @@ def iris():
 
     # Task 2) (Remove features, one by one)
     print("\n:::: Experiment A.3 ::::")    
+    linear_classifier.log_class_feature_correlation()
     linear_classifier.train(training_first = True, selected_features=[0,2,3])
     linear_classifier.test()
     linear_classifier.log_performance(":::: Experiment A.3 ::::")

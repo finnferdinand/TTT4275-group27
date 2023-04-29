@@ -57,6 +57,7 @@ class kNN(Classifier):
         else:                         # The classifier has been trained so clusters should be used
             extended_c = np.tile(self.centroids, (self.num_chunks, 1))
             extended_clabel = np.tile(self.clabel, self.num_chunks)
+            # All threads use the same cluster centroids, but run currently to increase computational efficiency.
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_chunks) as executor:
                 self.classified_labels = np.concatenate(list(executor.map(
                     self._classify_chunk, 
@@ -99,7 +100,6 @@ class kNN(Classifier):
     def train(self, num_clusters):
         """
         Clusters each class to specified number of clusters.
-        Returns the corresponding centroid and it's label.
         """
         start = time.time()
         print("Training kNN classifier....")
