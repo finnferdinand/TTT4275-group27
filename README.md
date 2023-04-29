@@ -44,6 +44,11 @@ Create a virtual python environment (this only needs to be done once)
 ```bash
 $ python -m venv .venv
 ```
+or
+```bash
+$ python3 -m venv .venv
+```
+
 
 Activate the virtual environment with
 ```bash
