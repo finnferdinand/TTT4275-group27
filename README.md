@@ -44,7 +44,7 @@ Create a virtual python environment (this only needs to be done once)
 ```bash
 $ python -m venv .venv
 ```
-or
+or for some cases in Ubuntu 
 ```bash
 $ python3 -m venv .venv
 ```
@@ -53,6 +53,10 @@ $ python3 -m venv .venv
 Activate the virtual environment with
 ```bash
 $ source .venv/bin/activate
+```
+or for some cases in Windows
+```bash
+$ .\.venv\Scripts\activate
 ```
 
 Install requirements
