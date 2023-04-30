@@ -14,6 +14,7 @@ expensive.
 """
 
 import numpy as np
+import array_to_latex as a2l
 from matplotlib import pyplot as plt
 import scipy.stats.contingency
 
@@ -88,6 +89,10 @@ class Linear(Classifier):
         self.log_write(f"Err. rate: {round(self.get_error_rate(self.train_confusion_matrix)*100, 2)}%" +
               f"   " * self.dataset.num_classes +
               f" Err. rate: {round(self.get_error_rate(self.test_confusion_matrix)*100, 2)}%\n")
+        
+        print("LaTeX format of the matrices:\n")
+        a2l.to_ltx(self.train_confusion_matrix, frmt = '{:2d}')
+        a2l.to_ltx(self.test_confusion_matrix, frmt = '{:2d}')
     
     def plot_histograms(self):
         print("Producing histograms...")
