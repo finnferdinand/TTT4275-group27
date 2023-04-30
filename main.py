@@ -14,3 +14,4 @@ if __name__ == "__main__":
     digits()
 
     plt.show()
+    print("\nAll experiments completed. \nPlease see [output.txt] and [figures/] for results!")
