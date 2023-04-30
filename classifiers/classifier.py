@@ -5,7 +5,6 @@ An abstract class for a general classifier.
 
 import os
 import numpy as np
-import array_to_latex as a2l
 from matplotlib import pyplot as plt
 
 from utilities.logger import Logger
@@ -30,9 +29,6 @@ class Classifier(object):
         self.logger.write("Confusion Matrix:\n")
         self.logger.write(f"{self.confusion_matrix}\n")
         self.logger.write(f"Error rate: {round(self.get_error_rate(self.confusion_matrix)*100, 2)}%\n\n")
-
-        print("LaTeX format of the matrix:\n")
-        a2l.to_ltx(self.confusion_matrix, frmt = '{:4d}')
 
     def get_error_rate(self, confusion_matrix):
         return 1 - np.trace(confusion_matrix) / np.sum(confusion_matrix)
